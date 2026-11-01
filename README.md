@@ -41,7 +41,7 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ### Tracks — pattern overview and playback controls
 
-![TR 01–08 on Akai Force: rounded controls, step indicators and automatic rotation](docs/images/tracks-force-1.3.0.png)
+![TR 01–08 on Akai Force: rounded controls, step indicators and automatic rotation](docs/images/tracks-force-1.2.5.png)
 
 ### CONFIG — MIDI notes and GATE / HOLD
 
