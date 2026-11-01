@@ -45,7 +45,7 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ### CONFIG — MIDI notes and GATE / HOLD
 
-![CONFIG on Akai Force: sixteen MIDI notes and independent GATE / HOLD controls](docs/images/config-force-1.3.0.png)
+![CONFIG on Akai Force: sixteen MIDI notes and independent GATE / HOLD controls](docs/images/config-force-1.2.5.png)
 
 ## Download and setup
 
