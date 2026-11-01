@@ -53,9 +53,14 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ## Download and setup
 
-Install [piClideaN-MPC-1.3.0-armv7.zip](Installation/piClideaN-MPC-1.3.0-armv7.zip) with a compatible portable-package installer. See [Installation and removal](docs/INSTALLATION.md).
+Choose the package for your device. Both builds use πClideaN **1.3.0**.
 
-Gen2 / AArch64: a separate [**1.3.0 test package**](Installation/piClideaN-MPC-1.3.0-aarch64.zip) is available from [Thomas Phillips’s Live III port](https://github.com/timomacquis/piClideaN16-MPC/pull/2). The original 1.2.4 port was tested on his Live III; the rebuilt 1.3.0 package awaits device validation. The Gen1 / Force download above is unchanged. See the [integration checks and remaining device tests](docs/GEN2-VALIDATION.md). See [Gen2 installation](docs/INSTALLATION-GEN2.md) and [Gen2 build](docs/BUILD-GEN2.md).
+| Device generation | Architecture | Download | Installation |
+| --- | --- | --- | --- |
+| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.0/piClideaN-MPC-1.3.0-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
+| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.0/piClideaN-MPC-1.3.0-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+
+Gen1 / Force is the existing device-validated release and is unchanged. The Gen2 1.3.0 build passes offline checks and awaits device validation. Thomas Phillips tested the original 1.2.4 port on MPC Live III; other Gen2 models are untested. Thanks to Thomas for the port and Live III skin fix. See [Gen2 validation](docs/GEN2-VALIDATION.md) and [build instructions](docs/BUILD-GEN2.md).
 
 ## Documentation
 
