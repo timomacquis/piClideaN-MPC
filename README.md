@@ -39,6 +39,10 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ## Screenshots
 
+### MOD — dual LFO modulation
+
+![MOD 1 assigned to A16: Random Smooth, Bounce and LFO chaining](docs/images/mod-force-1.3.0.png)
+
 ### Tracks — pattern overview and playback controls
 
 ![TR 01–08 on Akai Force: rounded controls, step indicators and automatic rotation](docs/images/tracks-force-1.2.5.png)
