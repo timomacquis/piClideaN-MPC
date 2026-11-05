@@ -31,7 +31,6 @@
   ],
   "gen2_device_tested": false,
   "force_feedback": "candidate.1 interface and other observed changes accepted; sustained GATE and hardware count-in remain unverified",
-  "official_device_cpu_bench_completed": false,
   "new_package_install_uninstall_device_test_completed": false,
   "standard_package_format": true,
   "standard_package_tools_commit": "eed2f0fa05ca0325c7cdfb6e9729dca8de3bd604",

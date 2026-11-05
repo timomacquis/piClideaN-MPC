@@ -11,7 +11,7 @@ Do not publish the former custom portable archives as an alternative installatio
 
 1. Set the release version and update the manuals and release notes. Preserve published parameter indices and the Gen2-only image workaround.
 2. Run the relevant engine, MIDI, UI and state tests. Record device results separately from offline checks; never copy a prior device test or CPU result to a new package.
-3. Build both architectures using `scripts/build.py` and `scripts/build_aarch64.py`.
+3. Build both architectures using `scripts/build.py` and `scripts/build_aarch64.py`. Keep diagnostic measurements in the private working folder. Publishing benchmark data requires the owner’s explicit approval; do not attach private reports automatically or claim PASS when no public measurement is supplied.
 4. Run `scripts/package.py` and `scripts/package_aarch64.py`. Both delegate to unmodified upstream `release.py`, pinned under `third_party/open-mpc-release`, and run `catalog_check.py --catalog --require-portable`.
 5. Compare packaged engine and native skin bytes with the tested builds. Check each package's id, uid, version, source repo, architecture, checksums and official installer scripts.
 6. Simulate install/reinstall/uninstall in isolated local settings, including architecture-specific registration. Such simulations are not device tests.

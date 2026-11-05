@@ -11,13 +11,13 @@
 
 ## Standard catalog distribution
 
-Both 1.3.1 installation downloads use the unmodified official Open MPC installer/uninstaller and standard manifest. They replace the former custom portable packages on this release. Engine and native skin bytes are unchanged. The standard ZIPs pass catalog checks and isolated installation/reinstallation/removal simulations; device installation of these exact standard ZIPs and a device CPU benchmark remain pending.
+Both 1.3.1 installation downloads use the unmodified official Open MPC installer/uninstaller and standard manifest. They replace the former custom portable packages on this release. Engine and native skin bytes are unchanged. The standard ZIPs pass catalog checks and isolated installation/reinstallation/removal simulations; device installation/removal of these exact standard ZIPs remains pending.
 
 ## Validation
 
 The user tried candidate.1 on Akai Force and accepted the interface and other observed changes. The audible GATE effect was not assessed with a sustained sound: the test used short drum hits. Count-in behavior on hardware remains to be confirmed. Offline checks cover scheduled Note On/Off durations, HOLD, ratchet, project state, count-in and density limits.
 
-The newly rebuilt Gen2 package is not device-validated. Thomas Phillips's earlier Live III test concerned the original 1.2.4 port; it is not a validation of 1.3.1. No new device CPU benchmark, Verified catalog status or universal crackle-free guarantee is claimed.
+The newly rebuilt Gen2 package is not device-validated. Thomas Phillips's earlier Live III test concerned the original 1.2.4 port; it is not a validation of 1.3.1. No Gen2 CPU result, Verified catalog status or universal crackle-free guarantee is claimed.
 
 ---
 
