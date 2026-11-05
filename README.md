@@ -2,7 +2,7 @@
 
 **Version 1.3.1 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
 
-![πClideaN 16 MPC](docs/images/pattern-line-force-1.2.5.png)
+![πClideaN 16 MPC — PATTERN EDIT, per-step velocity lock](Cover.png)
 
 Build evolving rhythmic and melodic patterns with sixteen independent lanes, per-step expression, scales and a native touch interface. Drive synthesizers, drum instruments and sample tracks through the plugin’s dedicated MIDI output.
 
