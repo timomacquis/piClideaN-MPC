@@ -37,3 +37,7 @@ These applications are not runtime dependencies. No firmware, samples, presets o
 ## Extended modulation generators
 
 Random Walk, Random Loop, Bounce and cross-LFO control are original MIT implementations. The documented behaviours of [Lunar Modulator](https://github.com/ip2k/lunar-modulator) informed the design; no Lunar audio engine, firmware or source implementation is incorporated.
+
+## Standard release tooling
+
+The packaging and catalog-check tools under `third_party/open-mpc-release` are unmodified files from Open MPC / mpc-vst-plugins, MIT licensed. The exact upstream commit and file hashes are recorded in UPSTREAM.json; its LICENSE is included. They package and validate releases and do not replace the pinned runtime wrapper.

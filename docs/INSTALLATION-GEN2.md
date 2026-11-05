@@ -1,6 +1,6 @@
 # Installation and removal (Gen2, aarch64)
 
-This guide ships inside `piClideaN-MPC-1.3.1-aarch64.zip`. For Gen1 and Force, use `piClideaN-MPC-1.3.1-armv7.zip` and its own guide.
+The standard package `ClideaN-MPC-1.3.1-mpc-aarch64.zip` includes generated instructions in `INSTALL.md`; this page is the detailed Gen2 guide. For Gen1 and Force, use `ClideaN-MPC-1.3.1-mpc-armv7.zip` and its own guide.
 
 ## Requirements
 
@@ -13,7 +13,7 @@ Thomas Phillips tested the original 1.2.4 port on an MPC Live III (aarch64, az0x
 ## Install by hand
 
 1. Save the current project, then stop playback.
-2. Unzip `piClideaN-MPC-1.3.1-aarch64.zip`. The plugin folder is `portable/Timo - VST - πClideaN MPC`.
+2. Unzip `ClideaN-MPC-1.3.1-mpc-aarch64.zip`. The plugin folder is `portable/Timo - VST - πClideaN MPC`.
 3. Copy that folder to the device's `Synths` folder, for example `/nvme/Synths/Timo - VST - πClideaN MPC`. Keep the folder name and the `.so` executable.
 4. Back up `MPC.settings` (on a Live III: `/data/Settings/MPC/MPC.settings`). Stop MPC (`systemctl stop acvs`) before editing it. MPC rewrites the file while it runs.
 5. In `MPC.settings`, add this entry as the first child of `<VALUE name="pluginList-arm-64bit"><KNOWNPLUGINS>`, adjusting the path to your `Synths` folder:

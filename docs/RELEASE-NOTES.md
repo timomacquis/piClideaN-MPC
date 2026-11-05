@@ -9,6 +9,10 @@
 - Preserve all 4,096 parameter keys and indices. Older projects load with per-step GATE inheritance. Newly saved projects include GATE data and cannot be opened by 1.3.0; keep the original project before upgrading.
 - Provide separate Gen1 ARM32 and Gen2 ARM64 packages, retaining the Live III small-image workaround exclusively in the Gen2 skin.
 
+## Standard catalog distribution
+
+Both 1.3.1 installation downloads use the unmodified official Open MPC installer/uninstaller and standard manifest. They replace the former custom portable packages on this release. Engine and native skin bytes are unchanged. The standard ZIPs pass catalog checks and isolated installation/reinstallation/removal simulations; device installation of these exact standard ZIPs and a device CPU benchmark remain pending.
+
 ## Validation
 
 The user tried candidate.1 on Akai Force and accepted the interface and other observed changes. The audible GATE effect was not assessed with a sustained sound: the test used short drum hits. Count-in behavior on hardware remains to be confirmed. Offline checks cover scheduled Note On/Off durations, HOLD, ratchet, project state, count-in and density limits.

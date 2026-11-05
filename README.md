@@ -57,8 +57,8 @@ Choose the package for your device. Both builds use πClideaN **1.3.1**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.1/piClideaN-MPC-1.3.1-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
-| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.1/piClideaN-MPC-1.3.1-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.1/ClideaN-MPC-1.3.1-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
+| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.1/ClideaN-MPC-1.3.1-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
 The 1.3.1 engine and interface were tried on Force as candidate.1. Per-step GATE MIDI timing passed offline tests; its audible effect on a sustained target and device count-in behavior remain to be confirmed. The Gen2 1.3.1 build passes offline checks and awaits device validation. Thomas Phillips tested the original 1.2.4 port on MPC Live III; other Gen2 models are untested. Thanks to Thomas for the port and Live III skin fix. See [Gen2 validation](docs/GEN2-VALIDATION.md) and [build instructions](docs/BUILD-GEN2.md).
 
@@ -67,7 +67,7 @@ The 1.3.1 engine and interface were tried on Force as candidate.1. Per-step GATE
 - [User manual](docs/USER-MANUAL.md) · [Standalone illustrated manual](docs/USER-MANUAL.html)
 - [MIDI engine](docs/ENGINE.md)
 - [Implementation](docs/IMPLEMENTATION.md)
-- [Build from source](docs/BUILD.md)
+- [Build from source](docs/BUILD.md) · [Release procedure](docs/RELEASING.md)
 - [Third-party notices](THIRD_PARTY.md)
 
 ## Repository layout
