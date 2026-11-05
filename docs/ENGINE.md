@@ -67,3 +67,11 @@ Applied scale and root metadata are saved with the project. Newly saved states u
 The eleven control generators live in `src/mod_lfo.h` and `src/mod_extended.h`. `src/mod_chain.h` applies bounded previous-value cross modulation. `src/mod_preview_worker.h` computes static waveform previews from immutable snapshots on one dedicated worker, without MIDI or host callbacks. Completed results are cached, stale results rejected and requests coalesced to at most ten per second.
 
 The two track pages share a 128-frame miniature atlas with repeated state plateaus. Each passive miniature uses one native control. The MIX and NOTE ON paths remain independent of preview generation.
+
+## Per-step GATE and bounded random density
+
+Each lane stores 32 signed-byte GATE values: -1 means inheritance and 10–95 is an explicit lock. The fourth contextual Q-Link edits line GATE in LINE and selected-step GATE in EDIT. A retired read-only preview handle drives its static lock artwork, without adding or reordering parameter indices. Stored GATE is the base for existing modulation; HOLD retains note ownership priority.
+
+An optional GATES suffix is validated before state mutation. Old projects without it inherit line GATE; older plugin versions reject new states. RAND evaluates drafts and commits only a result whose effective trigger density is at most floor(3 × STEPS / 4). Nonselected controls remain intact, and impossible drafts are discarded. Rd ALL applies the same limit and preserves mute states and pitches.
+
+COUNT-IN is explicit in CONFIG and defaults to OFF. It suppresses pattern/LFO note emission during selected host pre-roll, with bounded timeout and reset handling. Native parameter notifications remain bounded and graphics remain cached.

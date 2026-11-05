@@ -143,14 +143,28 @@ parts += [button('edit_tool','SELECT',800,394,148,46,False,0,2,extra=[gate('edit
 im,dr=image(1240,264);rounded(dr,(1,1,1238,262),fill=C['oled'],outline='#68736a',width=2,radius=12);dr.line((8,131,1230,131),fill='#68736a',width=1);save('scopes.png',im);parts.append(art('scopes.png',20,120,1240,264))
 im,d=image(296,94,C['oled']);rounded(d,(1,1,294,92),outline='#68736a');save('parameter_box.png',im)
 im,d=image(296,94,C['oled']);rounded(d,(1,1,294,92),outline='#303f36');save('parameter_box_read_only.png',im)
-for view,keys in [(0,['sel_'+k for k in ['velocity','prob','humanize','gate','steps','hits','rotate','division']]),(1,['sel_velocity','sel_prob','sel_humanize','sel_gate','step_velocity','step_prob','step_ratchet','step_decay'])]:
+# Shared static lock assets; one gesture owner and unchanged dial geometry.
+im,d=image(296,94,C['oled']);rounded(d,(1,1,294,92),fill='#302135',outline='#a566ad');save('parameter_box_custom.png',im)
+strip=Image.open(A/'dial.png').convert('RGB');pixels=strip.load();oled=tuple(int(C['oled'][i:i+2],16) for i in (1,3,5))
+for yy in range(strip.height):
+ for xx in range(strip.width):pixels[xx,yy]=(48,33,53) if pixels[xx,yy]==oled else (219,157,221)
+save('dial_custom.png',strip)
+
+for view,keys in [(0,['sel_'+k for k in ['velocity','prob','humanize','gate','steps','hits','rotate','division']]),(1,['sel_velocity','sel_prob','sel_humanize','q3','step_velocity','step_prob','step_ratchet','step_decay'])]:
  for title,y in [('LINE',120),('STEP' if view else 'STEPS',252)]:
   im,d=image(720,26,C['oled']);text(d,(0,0),title,20,READ_ONLY_TEXT if view and y==120 else C['text']);fn=f'scope_v{view}_{y}.png';save(fn,im);c=art(fn,34,y+4,720,26);c['bounds']['additionalInvalidatingHandles']=[gate('edit_view',view,2)];parts.append(c)
  for n,key in enumerate(keys):
   x=30+(n%4)*308;y=151+(n//4)*132
-  read_only=bool(view and n<4)
+  read_only=bool(view and n<3)
   colour='ff'+READ_ONLY_TEXT[1:] if read_only else 'ffe8e5d0'
-  children=[art('parameter_box_read_only.png' if read_only else 'parameter_box.png',0,0,296,94),child('Knob',dict(version=5,knobType='FilmStrip',filmStrip='dial_read_only.png' if read_only else 'dial.png',numFrames=127,invert=False,dragOrientation='Vertical',handleName='Data'),9,19,58,58),label(82,11,210,27,20,kind='Name',colour=colour),label(82,38,200,40,34,colour=colour)]
+  custom_key=('preview0' if n==3 else f'step_custom{n-4}') if view and n>=3 else None
+  children=[]
+  for custom in ([0,1] if custom_key else [0]):
+   ink='ffdb9ddd' if custom else colour
+   group=[art('parameter_box_custom.png' if custom else 'parameter_box_read_only.png' if read_only else 'parameter_box.png',0,0,296,94),child('Knob',dict(version=5,knobType='FilmStrip',filmStrip='dial_custom.png' if custom else 'dial_read_only.png' if read_only else 'dial.png',numFrames=127,invert=False,dragOrientation='Vertical',handleName='Data'),9,19,58,58),label(82,11,210,27,20,kind='Name',colour=ink),label(82,38,200,40,34,colour=ink)]
+   if custom_key:
+    for c in group:c['bounds']['additionalInvalidatingHandles']=[gate(custom_key,custom,5 if custom_key=='preview0' else 2)]
+   children.extend(group)
   if read_only:
    for component in children:component['bounds']['acceptsHWFocus']='No'
   kind=local(f'knob_v{view}_{n}',children,None if read_only else [action('Q-Link')],focus=not read_only)
@@ -184,8 +198,6 @@ for view,keys in [(0,['sel_'+k for k in ['velocity','prob','humanize','gate','st
    actions=[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')]
    k=local(f'rand_target{n}',picked,actions,focus=True)
    parts.append(placed(k,f'rand_toggle{n}',x,y,296,94,[gate('edit_view',0,2),gate('rand_mode',1,2)],maps=[{'key':'Value','value':f'Parameter {I[key]}'}]))
-  if view and n>=4:
-   im=Image.new('RGBA',(10,10),(0,0,0,0));d=ImageDraw.Draw(im);d.ellipse((2,2,7,7),fill=C['text']);fn='custom_dot.png';save(fn,im);c=art(fn,x+277,y+10,10,10);c['bounds']['additionalInvalidatingHandles']=[gate('edit_view',1,2),gate(f'step_custom{n-4}',1,2)];parts.append(c)
 # Each pad has ONE native touch owner containing its passive state artwork.
 # A sibling display above a separate Button can intercept physical touch on MPC.
 for i in range(32):
@@ -303,6 +315,9 @@ for pending in range(4):
    kind=local(tag,children,[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')],focus=True);c=placed(kind,key,x,y,w,h,maps=maps)
   c['bounds']['additionalInvalidatingHandles']=[gate('choose_target',pending,4)];config.append(c)
 config.append(button('open_mapping','RESET',875,302,360,46,native_touch=True))
+# COUNT-IN is an explicit match to MPC; never guessed from stopped PPQ.
+im,d=image(360,28);text(d,(0,0),'COUNT-IN',19,C['muted']);save('config_countin.png',im);config.append(art('config_countin.png',875,382,360,28))
+config.append(field('can_redo',875,412,360,46,26))
 # Only MOD still owns a selection layer.
 def overlay(dialog,title):
  im,d=image(1280,628);text(d,(40,25),title,32);filename=f'dialog{dialog}.png';save(filename,im);return [art(filename,0,0,1280,628)]

@@ -1,0 +1,36 @@
+{
+  "version": "1.3.1",
+  "date": "2026-11-05",
+  "parameter_count": 4096,
+  "parameter_indices_unchanged": true,
+  "sanitizers": [
+    "address",
+    "undefined"
+  ],
+  "native_test_suites": [
+    "release131_test",
+    "count_in_test",
+    "mod_engine_test",
+    "mod_palette_test",
+    "mod_preview_worker_test",
+    "next_features_test",
+    "ui7_engine_test",
+    "scales_panel_test",
+    "mod_refresh_wrapper_test"
+  ],
+  "offline_tests_passed": true,
+  "gen1_engine_sha256": "e820f4abab053fe541514ded88f61b71ab5d2044a4d28c8440f48dddc1003c26",
+  "gen2_engine_sha256": "b841331cbc37e77cbfe184b0e22406ebee991084cfde909b646dfd6e71ae2ca4",
+  "gen1_candidate_engine_identical": true,
+  "gen1_image_assets_pixel_identical_to_candidate": 905,
+  "gen2_min_image_area": 6400,
+  "gen2_glibc_versions": [
+    "GLIBC_2.17",
+    "GLIBC_2.29",
+    "GLIBC_2.34"
+  ],
+  "gen2_device_tested": false,
+  "force_feedback": "candidate.1 interface and other observed changes accepted; sustained GATE and hardware count-in remain unverified",
+  "official_device_cpu_bench_completed": false,
+  "new_package_install_uninstall_device_test_completed": false
+}

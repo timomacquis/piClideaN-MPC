@@ -1,6 +1,6 @@
 # πClideaN16 MPC — User Manual
 
-Version 1.3.0
+Version 1.3.1
 
 ## 1. Overview
 
@@ -114,6 +114,8 @@ A new Steps value respects unselected Hits and Rotate. If RAND changes Steps, Hi
 
 A random result can equal the previous value.
 
+RAND and Rd ALL limit generated active steps to **75% of each lane length**, rounded down (12/16, 24/32). Manual editing remains unrestricted. In selective RAND, unselected parameters are preserved; if the density constraint is impossible, the lane stays unchanged and selection closes. A one-step generated lane is silent. This limit does not reduce ratchet repeats or independent LFO triggers.
+
 ### Rd ALL — sixteen fresh patterns
 
 Tap **Rd ALL**, then **APPLY** in the confirmation panel. **CANCEL** keeps everything unchanged.
@@ -144,7 +146,9 @@ At DECAY 0, only the first hit plays. With one hit, Decay has no effect.
 
 Without custom values, velocity and probability follow the lane; ratchet is 1 and decay is 100.
 
-A small dot marks a stored custom value, even if it equals the current lane default. Here, step 04 has velocity 49 and inherits probability 46%.
+**GATE · STEP**, in the upper row, sets a duration lock for the selected step: 10–95% of the step or each ratchet subdivision. Without a lock it inherits LINE GATE. HOLD takes priority; switching back to GATE restores these stored durations.
+
+The full control box turns **purple** when the step has a stored lock. Other upper-row LINE references stay read-only. ERASE in SELECT clears the step’s expression locks, including GATE; in DRAW it removes the trigger.
 
 ### Select, draw, erase
 
@@ -161,7 +165,7 @@ Changing expression alone does not add a note.
 
 Edits are immediate; there is no undo.
 
-The dimmed **LINE** row remains a read-only reference. Return to LINE to change its defaults.
+In EDIT, the dimmed VELOCITY, PROBABILITY and HUMANIZE controls remain lane references. GATE · STEP edits the selected step. Return to LINE to change lane defaults.
 
 ## 5. MOD — dual LFO modulation
 
@@ -271,7 +275,7 @@ Muted lane buttons are dimmed. Selecting one does not unmute it; its selection b
 
 **Green:** RAND selection.
 
-A small dot on a step or expression control marks customization. On a lane button, it marks an enabled modulation destination.
+A purple expression-control box marks a stored step lock. The step is purple when it has expression locks; its small dot remains an additional customization indicator. On a lane button, it marks an enabled modulation destination.
 
 Tap **MODE** to open the playback-direction panel. Select a mode to apply it and close the panel; **CANCEL** keeps the current mode.
 
@@ -395,3 +399,7 @@ Held notes and live LFO phases are not saved. Stop releases owned notes.
 Probability follows the lane seed and musical position, so a repeating host loop can repeat its decisions.
 
 πClideaN does not create native clips, drive physical pad LEDs or produce audio. Scheduling limits are described in the engine documentation.
+
+## COUNT-IN — match the host
+
+Set COUNT-IN in CONFIG to match MPC: **OFF** (default), **RECORD**, or **RECORD + PLAY**. Notes from the pattern and LFOs wait during the selected count-in. An eight-beat timeout prevents indefinite waiting when host and plugin settings differ. This correction passed offline tests; count-in playback on a device remains to be confirmed.

@@ -12,11 +12,11 @@ The package contains regular files, requires no symbolic links and can be stored
 
 1. Save the current project before allowing an installer to restart MPC.
 2. Open the installer's local ZIP installation page.
-3. Select `piClideaN-MPC-1.2.1-armv7.zip` from `Installation/`.
+3. Select `piClideaN-MPC-1.3.1-armv7.zip` from `Installation/`.
 4. Select **User memory / Synths** or the available **SSD / Synths** destination.
 5. Review the destination and complete the installation. Allow the requested MPC restart after saving.
 6. Create a Plugin Track and select **πClideaN MPC**.
-7. Create or select the target Drum Track or drum instrument.
+7. Create or select the target synthesizer, Drum Track or drum instrument.
 8. On the target track, enable `piClideaN MPC Out` as its MIDI input and receive channel 1 or all channels.
 9. Start the Force transport.
 
@@ -46,3 +46,5 @@ Use the installer's removal workflow so the plugin files and its registration ar
 - Disable unwanted parallel MIDI inputs to avoid duplicate hits.
 - For multiple instances, choose the corresponding numbered output port.
 - In HOLD, the target must respond to Note Off; One Shot playback may ignore it.
+
+For **Gen2 / ARM64**, use the separate [Gen2 installation guide](INSTALLATION-GEN2.md) and AArch64 package. Keep a copy of projects before updating: 1.3.0 cannot load the new saved GATE locks.
