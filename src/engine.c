@@ -74,6 +74,8 @@ typedef struct {
  snd_seq_t *seq;int port,queue;snd_seq_remove_events_t *rem;
  int active_note[LANES],active_ch[LANES];
  double active_off[LANES],queue_now,queue_end,expected_ppq,last_host_ppq;
+ /* Runtime-only unwrapped lane clock; host PPQ remains wrapped for seek detection. */
+ double lane_beat_offset,lane_next_beat;
  /* Visual-only bounded rings; no influence on note scheduling or errors. */
  double flash_at[LANES][FLASH_EVENTS],flash_until[LANES];
  unsigned flash_read[LANES],flash_count[LANES];
@@ -493,6 +495,8 @@ static void song_pos(void *inst,double ppq,double bpm,int playing,int frames){
  int jump=e->valid&&(backwards||fabs(gap)>fmax(.25,block*4.));
  if(jump){panic_owned(e);e->valid=0;for(int i=0;i<LANES;i++)e->reset_at[i]=-1;}
  for(int i=0;i<LANES;i++)if(!(e->release_pending&(1u<<i))&&e->active_note[i]>=0&&e->active_off[i]<=e->queue_now)e->active_note[i]=-1;
+ /* Start/seek reanchors to host time; an ordinary loop keeps lane time. */
+ if(!e->valid)e->lane_beat_offset=0;
  double base=e->valid?e->queue_end:e->queue_now+0.002;
  if(e->valid){
   /* gap is already unwrapped across a predicted loop. Keep the watermark
@@ -504,22 +508,27 @@ static void song_pos(void *inst,double ppq,double bpm,int playing,int frames){
     never erase already queued Note On/Off because of callback jitter. */
  if(base<e->queue_now+0.001)base=e->queue_now+0.002;
  /* Never pull a future boundary backwards: that would overlap prior notes. */
+ /* Keep an independent coverage watermark: adding a large loop offset to
+    wrapped PPQ each block can introduce rounding overlaps and duplicate hits. */
+ double music_start=e->valid?e->lane_next_beat:ppq;
  double pos=ppq,remaining=block,elapsed=0;
  int budget=EVENTS;
  int in_cycle=e->cycle&&pos>=e->cycle_a-1e-8&&pos<e->cycle_b;
  for(int segments=0;remaining>1e-10&&segments<64;segments++){
   double duration=remaining;
   if(in_cycle)duration=fmin(duration,e->cycle_b-pos);
-  if(duration<=1e-10){pos=e->cycle_a;continue;}
+  if(duration<=1e-10){e->lane_beat_offset+=e->cycle_b-e->cycle_a;pos=e->cycle_a;continue;}
   e->mod_span_offset=elapsed*60./bpm;
-  if(!span(e,pos,pos+duration,bpm,base+elapsed*60./bpm,in_cycle?e->cycle_b:INFINITY,&budget)){panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
+  /* A host loop is not a note boundary: preserve gate tails and ratchet latches. */
+  if(!span(e,music_start+elapsed,music_start+(elapsed+duration),bpm,base+elapsed*60./bpm,INFINITY,&budget)){panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
   pos+=duration;elapsed+=duration;remaining-=duration;
-  if(in_cycle&&pos>=e->cycle_b-1e-10){pos=e->cycle_a;memset(e->mod_latch_valid,0,sizeof e->mod_latch_valid);for(int i=0;i<LANES;i++)if(e->reset_at[i]>=0)e->reset_at[i]=e->cycle_a;}
+  if(in_cycle&&pos>=e->cycle_b-1e-10){pos=e->cycle_a;e->lane_beat_offset+=e->cycle_b-e->cycle_a;}
  }
  if(remaining>1e-10){e->errors++;panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
+ e->lane_next_beat=music_start+elapsed;e->lane_beat_offset=e->lane_next_beat-pos;
  e->queue_end=base+elapsed*60./bpm;e->expected_ppq=pos;e->last_host_ppq=host_ppq;
  int moved=0;
- for(int i=0;i<LANES;i++){double k=floor((ppq+1e-7)/step_beats[e->lane[i].f[3]]);e->display_tick[i]=k;long h=visit_index(&e->lane[i],k);if(e->head[i]!=h){moved=1;e->head[i]=h;}}
+ for(int i=0;i<LANES;i++){double k=floor((music_start+1e-7)/step_beats[e->lane[i].f[3]]);e->display_tick[i]=k;long h=visit_index(&e->lane[i],k);if(e->head[i]!=h){moved=1;e->head[i]=h;}}
  if(moved||!e->playing)e->revision++;
  int starting=!e->playing;e->playing=1;e->valid=1;
  visual_snapshot(e,frames,starting);

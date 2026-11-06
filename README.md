@@ -1,6 +1,6 @@
 # πClideaN 16 MPC
 
-**Version 1.3.1 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
+**Version 1.3.2 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
 
 ![πClideaN 16 MPC — PATTERN EDIT, per-step velocity lock](Cover.png)
 
@@ -53,14 +53,14 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ## Download and setup
 
-Choose the package for your device. Both builds use πClideaN **1.3.1**.
+Choose the package for your device. Both builds use πClideaN **1.3.2**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.1/ClideaN-MPC-1.3.1-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
-| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.1/ClideaN-MPC-1.3.1-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.2/ClideaN-MPC-1.3.2-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
+| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.2/ClideaN-MPC-1.3.2-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
-The 1.3.1 engine and interface were tried on Force as candidate.1. Per-step GATE MIDI timing passed offline tests; its audible effect on a sustained target and device count-in behavior remain to be confirmed. The Gen2 1.3.1 build passes offline checks and awaits device validation. Thomas Phillips tested the original 1.2.4 port on MPC Live III; other Gen2 models are untested. Thanks to Thomas for the port and Live III skin fix. See [Gen2 validation](docs/GEN2-VALIDATION.md) and [build instructions](docs/BUILD-GEN2.md).
+The 1.3.2 loop-continuity fix was validated on Force as candidate.1. Gen2 packages are built from the same sources with the Live III skin workaround and await device validation. Thanks to Thomas Phillips for the original Gen2 port. See [Gen2 validation](docs/GEN2-VALIDATION.md).
 
 ## Documentation
 

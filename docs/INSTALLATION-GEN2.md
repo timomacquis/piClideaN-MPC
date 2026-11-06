@@ -1,6 +1,6 @@
 # Installation and removal (Gen2, aarch64)
 
-The standard package `ClideaN-MPC-1.3.1-mpc-aarch64.zip` includes generated instructions in `INSTALL.md`; this page is the detailed Gen2 guide. For Gen1 and Force, use `ClideaN-MPC-1.3.1-mpc-armv7.zip` and its own guide.
+The standard package `ClideaN-MPC-1.3.2-mpc-aarch64.zip` includes generated instructions in `INSTALL.md`; this page is the detailed Gen2 guide. For Gen1 and Force, use `ClideaN-MPC-1.3.2-mpc-armv7.zip` and its own guide.
 
 ## Requirements
 
@@ -8,19 +8,19 @@ The standard package `ClideaN-MPC-1.3.1-mpc-aarch64.zip` includes generated inst
 - Root shell access (SSH) or a compatible installer that handles aarch64 portable plugin ZIPs and the `pluginList-arm-64bit` registration.
 - A writable, executable `Synths` folder. Removable drives are often mounted `noexec` and cannot load a plugin. On an MPC Live III the internal `/nvme/Synths` is writable and executable; `/synths` is read-only.
 
-Thomas Phillips tested the original 1.2.4 port on an MPC Live III (aarch64, az0x base 5.0.17). This rebuilt 1.3.1 package is pending a fresh device test. Other Gen2 models are untested.
+Thomas Phillips tested the original 1.2.4 port on an MPC Live III (aarch64, az0x base 5.0.17). This rebuilt 1.3.2 package is pending a fresh device test. Other Gen2 models are untested.
 
 ## Install by hand
 
 1. Save the current project, then stop playback.
-2. Unzip `ClideaN-MPC-1.3.1-mpc-aarch64.zip`. The plugin folder is `portable/Timo - VST - πClideaN MPC`.
+2. Unzip `ClideaN-MPC-1.3.2-mpc-aarch64.zip`. The plugin folder is `portable/Timo - VST - πClideaN MPC`.
 3. Copy that folder to the device's `Synths` folder, for example `/nvme/Synths/Timo - VST - πClideaN MPC`. Keep the folder name and the `.so` executable.
 4. Back up `MPC.settings` (on a Live III: `/data/Settings/MPC/MPC.settings`). Stop MPC (`systemctl stop acvs`) before editing it. MPC rewrites the file while it runs.
 5. In `MPC.settings`, add this entry as the first child of `<VALUE name="pluginList-arm-64bit"><KNOWNPLUGINS>`, adjusting the path to your `Synths` folder:
 
 ```xml
 <PLUGIN name="πClideaN MPC" descriptiveName="πClideaN MPC" format="VST"
-        category="Synth" manufacturer="Timo" version="1.3.1"
+        category="Synth" manufacturer="Timo" version="1.3.2"
         file="/nvme/Synths/Timo - VST - πClideaN MPC/piclidean_mpc.so"
         uid="5069434e" isInstrument="1" fileTime="0" infoUpdateTime="0"
         numInputs="0" numOutputs="2" isShell="0"/>

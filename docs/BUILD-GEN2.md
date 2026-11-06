@@ -15,4 +15,4 @@ Gen2 outputs live in `build/aarch64/`; its skin and receipt are separate from th
 
 `PICN_SKIN_MIN_IMAGE_AREA=6400` is enabled only by the Gen2 builder to work around the small Image-component issue observed on Live III. The default skin generation has no padding.
 
-The 1.3.1 Gen2 package requires device testing; the original contribution’s hardware test applies to its 1.2.4 build.
+The 1.3.2 Gen2 package requires device testing; the original contribution’s hardware test applies to its 1.2.4 build.

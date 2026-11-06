@@ -70,7 +70,7 @@ static int evolution_set(Engine *e,const char *key,int v){Lane *l=&e->lane[e->se
  for(int f=0;f<4;f++)if(!strcmp(key,extra_keys[6+f])){int value=clampi(v,f==2?-8:f==3?1:0,f==0?4:f==1?1:f==2?8:16);if(*play_field(l,f)!=value){*play_field(l,f)=value;e->release_pending|=1u<<e->selected;changed_lane(e,e->selected);}return 1;}
  if(!strcmp(key,"erase_values")){if(v>0&&e->edit_tool){if(effective_hit(l,e->step)){l->values[e->step][0]=0;changed_step(e,e->selected,e->step,0);}return 1;}if(v>0&&personalized(l,e->step)){l->gates[e->step]=-1;changed_selected(e);for(int f=1;f<5;f++){l->values[e->step][f]=-1;changed_step(e,e->selected,e->step,f);}}return 1;}
  if(!strcmp(key,"undo")||!strcmp(key,"redo"))return 1; /* retired */
- if(!strcmp(key,"reset_phase")){if(v>0){double d=step_beats[l->f[3]];if(e->playing)e->reset_at[e->selected]=ceil((e->expected_ppq-1e-8)/d)*d;else{l->origin=0;e->display_tick[e->selected]=0;e->reset_at[e->selected]=-1;}changed_selected(e);}return 1;}
+ if(!strcmp(key,"reset_phase")){if(v>0){double d=step_beats[l->f[3]];if(e->playing)e->reset_at[e->selected]=ceil((e->expected_ppq+e->lane_beat_offset-1e-8)/d)*d;else{l->origin=0;e->display_tick[e->selected]=0;e->reset_at[e->selected]=-1;}changed_selected(e);}return 1;}
  return 0;
 }
 static int evolution_get(Engine *e,const char *key,char *b,int size){Lane *l=&e->lane[e->selected];int n=-1,line,step,field;const char *suffix_hold;

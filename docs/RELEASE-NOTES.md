@@ -1,3 +1,18 @@
+# Version 1.3.2
+
+- Preserve independent lane cycles across host transport loop boundaries. A 10-step lane now continues with step 05 after a 64-step host loop instead of restarting at step 01.
+- Keep MIDI scheduling, playheads, traversal modes and automatic rotation on the same continuous musical timeline.
+- Preserve GATE tails and ratchet/modulation latches across normal loop returns. Explicit RESET PHASE, transport seeks and Stop/Play remain separate actions.
+- No parameter-index or project-state format changes.
+
+## Validation
+
+The fix was accepted by Greg on Akai Force, MPC OS 3.10.0.49, as 1.3.2-candidate.1. Offline sanitized transport tests compare looped and uninterrupted playback, including MIDI timestamps, 10/7/12/16-step lanes, nonzero loop starts, traversal modes, rotation, ratchets, HOLD and LFO modulation/NOTE ON. Existing regression tests also pass.
+
+Separate Gen1 ARMv7 and Gen2 AArch64 packages are provided. This release has not been tested on Gen2 hardware; Gen1 validation does not qualify Gen2.
+
+---
+
 # Version 1.3.1
 
 - Add per-step GATE locks using the existing upper-right control in EDIT. LINE GATE remains the default; steps without a lock inherit it.
