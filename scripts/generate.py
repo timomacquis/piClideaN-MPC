@@ -1,7 +1,7 @@
 """Generate the candidate model. All runtime identifiers and paths are ASCII."""
 from pathlib import Path
 import json
-from project_config import DISPLAY_NAME
+from project_config import DISPLAY_NAME, VERSION
 B=Path(__file__).resolve().parents[1]
 P=[]
 def add(key,name,lo=0,hi=1,default=0,**kw):
@@ -138,16 +138,25 @@ for param in P:
  if param['key'] in ('open_mapping','apply_mapping'):param['refresh_display']=False;param['hold_ms']=100
 for param in P:
  if param['key'].startswith(('mod0_','mod1_','mod_choose')) or param['key'] in ['mod_pad','open_rhythm','open_target','open_bank','close','map_sound'] or param['key'].startswith('open_sound'):param['refresh_display']=False
- if param['key']=='can_undo':param.update(min=0,max=7,poll=False)
+ if param['key']=='can_undo':param.update(min=0,max=7,poll=False,dynamic_display=True)
  if param['key']=='map_sound':param.pop('options',None);param.update(min=0,max=10,poll=False)
  if param['key']=='close':param['hold_ms']=100
 # Retired, unused readout index reused without shifting any published key.
 for param in P:
  if param['key']=='can_redo':param.update(name='COUNT-IN',min=0,max=2,options=['OFF','RECORD','RECORD + PLAY'],poll=False,refresh_display=False)
+# Reuse inactive controls contextually; never append or reorder the 4096 slots.
+for param in P:
+ if param['key']=='dialog':param['max']=7
+ if param['key']=='undo':param.update(name='VAR',momentary=True,refresh_display=False,poll=False)
+ if param['key']=='redo':param.pop('options',None);param.update(name='A/B',momentary=False,display='int',dynamic_display=True,refresh_display=False,poll=False)
+ if param['key']=='rhythm_choice':param.pop('options',None);param.update(name='Variation',min=0,max=2,display='int',dynamic_display=True,refresh_display=False,poll=False)
 (B/'params.json').write_text(json.dumps(P,ensure_ascii=True,indent=2)+'\n')
-(B/'vst.json').write_text(json.dumps(dict(name=DISPLAY_NAME,vendor='Timo',uid='PiCN',version=10302,so='piclidean_mpc.so',params='params.json',custom_skin=True,cc=False,nrpn=False,defines={'HAS_SONG_POS':1,'HAS_DISPLAY_REV':0,'DISPLAY_REV_NO_UPDATE':1,'PARAM_TEXT_MAX':64,'PICN_HOST_CONTEXT':1,'PICN_NOTIFICATION_BUDGET':8,'MPC_CHUNK_BYTES':32768}),indent=2)+'\n')
+(B/'vst.json').write_text(json.dumps(dict(name=DISPLAY_NAME,vendor='Timo',uid='PiCN',version=sum(int(v)*m for v,m in zip(VERSION.split("-",1)[0].split("."),(10000,100,1))),so='piclidean_mpc.so',params='params.json',custom_skin=True,cc=False,nrpn=False,defines={'HAS_SONG_POS':1,'HAS_DISPLAY_REV':0,'DISPLAY_REV_NO_UPDATE':1,'PARAM_TEXT_MAX':64,'PICN_HOST_CONTEXT':1,'PICN_NOTIFICATION_BUDGET':8,'MPC_CHUNK_BYTES':32768,'PICN_FACTORY_PROGRAMS':1}),indent=2)+'\n')
 ref=json.loads((B/'reference/DRUMTRACK-REFERENCE.json').read_text())
 (B/'src/drum_notes.h').write_text('/* Local reference-project mapping, not universal hardware discovery. */\nstatic const unsigned char drum_notes[128]={'+','.join(map(str,ref['notes']))+'};\n')
-(B/'build/reports').mkdir(parents=True,exist_ok=True)
-(B/'build/reports/PARAMETERS.json').write_text(json.dumps({'count':len(P),'keys':[p['key'] for p in P]},indent=2))
+(B/'Validation/PARAMETERS.json').write_text(json.dumps({'count':len(P),'keys':[p['key'] for p in P]},indent=2))
 print('Generated',len(P),'parameters')
+
+# Full-state factory bank; no new parameter handles.
+from generate_factory_programs import generate as generate_factory
+print("Native factory programs:",generate_factory())

@@ -703,7 +703,10 @@ static void copy_str(void *dst, const char *src, size_t max) {
  * NPRESETS: the port's presets.json, compiled into params.h by gen_vst.py; picking one sets each listed parameter in
  * file order, as a touch would, and has the host redraw them. PROG_PARAM: the engine's own preset parameter; a
  * program is one of its options (or whole numbers), so the current one is whatever the engine reports. */
-#if defined(NPRESETS)
+#if defined(PICN_FACTORY_PROGRAMS)
+#include "picn_factory_programs.h"
+#define NUM_PROGRAMS PICN_FACTORY_COUNT
+#elif defined(NPRESETS)
 #define NUM_PROGRAMS NPRESETS
 #elif defined(PROG_PARAM)
 #define NUM_PROGRAMS NPROGRAMS
@@ -724,7 +727,14 @@ static int get_program(wrap_t *w) {
 static void set_program(wrap_t *w, int idx) {
     if (idx < 0 || idx >= NUM_PROGRAMS || idx == get_program(w)) return;   /* a host re-selecting the current one
                                                                               * (JUCE does at load) keeps any edits */
-#if defined(NPRESETS)
+#if defined(PICN_FACTORY_PROGRAMS)
+    /* One complete, validated state transaction: all lanes, step locks, scales and MOD included. */
+    eng_set(w, "state", PICN_FACTORY[idx].state);
+    char accepted[8];
+    if (eng_get(w,"state_valid",accepted,sizeof accepted)<=0 || atoi(accepted)!=1) return;
+    w->program=idx;
+    for(int i=0;i<NPARAMS;i++) { w->open[i]=0; w->holdFrames[i]=0; w->changed[i]=!popup_is(i); }
+#elif defined(NPRESETS)
     for (int i = 0; i < PRESETS[idx].n; i++) {
         eng_set(w, PARAMS[PRESETS[idx].values[i].param].key, PRESETS[idx].values[i].value);
         w->changed[PRESETS[idx].values[i].param] = 1;   /* reported to the host from housekeeping() */
@@ -743,7 +753,9 @@ static void set_program(wrap_t *w, int idx) {
 static void program_name(wrap_t *w, int idx, char *out) {
     out[0] = 0;
     if (idx < 0 || idx >= NUM_PROGRAMS) return;
-#if defined(NPRESETS)
+#if defined(PICN_FACTORY_PROGRAMS)
+    (void)w; copy_str(out,PICN_FACTORY[idx].name,24);
+#elif defined(NPRESETS)
     (void)w;
     copy_str(out, PRESETS[idx].name, 24);
 #elif defined(PROG_PARAM)
@@ -839,7 +851,13 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
                 !strcmp(p, "receiveVstTimeInfo")) ? 1 : -1;
     case effGetChunk: {
         flush_pend0(e);
+        #if defined(PICN_FACTORY_PROGRAMS)
+        int prefix=snprintf(w->chunk,sizeof w->chunk,"PCPROG1 %d\n",w->program);
+        if(prefix<0 || prefix>=(int)sizeof w->chunk) return 0;
+        int len=eng_get(w,"state",w->chunk+prefix,sizeof w->chunk-prefix);
+#else
         int len = eng_get(w, "state", w->chunk, sizeof w->chunk);
+#endif
         if (len <= 0) return 0;
         *(void **)p = w->chunk;
         return (intptr_t)strlen(w->chunk) + 1;
@@ -849,9 +867,28 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
         memcpy(w->chunk, p, v);
         w->chunk[v - 1] = 0;
         __atomic_store_n(&w->has_pend0, 0, __ATOMIC_RELEASE);   /* a restore sets parameter 0 too */
+        #if defined(PICN_FACTORY_PROGRAMS)
+        const char *state=w->chunk; int saved_program=0;
+        if(!strncmp(state,"PCPROG1 ",8)) {
+            char *end; long n=strtol(state+8,&end,10);
+            if(end==state+8 || *end!='\n' || n<0 || n>2147483647L) return 0;
+            /* A reduced factory bank must not discard a project's full sequencer state state. */
+            saved_program=n<NUM_PROGRAMS?(int)n:0; state=end+1;
+        } else {
+            /* Old PICN project/XPL chunks still load; identify exact factory matches. */
+            for(int i=0;i<NUM_PROGRAMS;i++) if(!strcmp(state,PICN_FACTORY[i].state)){saved_program=i;break;}
+        }
+        eng_set(w,"state",state);
+        char accepted[8];
+        if(eng_get(w,"state_valid",accepted,sizeof accepted)<=0 || atoi(accepted)!=1) return 0;
+        w->program=saved_program;
+        for(int i=0;i<NPARAMS;i++){w->open[i]=0;w->holdFrames[i]=0;w->changed[i]=!popup_is(i);}
+        return 1;
+#else
         eng_set(w, "state", w->chunk);
         char accepted[8];
         return eng_get(w, "state_valid", accepted, sizeof accepted) > 0 && atoi(accepted) == 1;
+#endif
     }
     default: return 0;
     }
@@ -884,6 +921,14 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
     w->dsp = g_api->create(MODULE_DIR);
 #endif
     if (!w->dsp) { pthread_mutex_destroy(&w->lock); free(w); return NULL; }
+#if defined(PICN_FACTORY_PROGRAMS)
+    /* Load the same complete INIT state that the native program menu names. */
+    g_api->set_param(w->dsp,"state",PICN_FACTORY[0].state);
+    char initial_valid[8];
+    if(g_api->get_param(w->dsp,"state_valid",initial_valid,sizeof initial_valid)<=0 || atoi(initial_valid)!=1) {
+        g_api->destroy(w->dsp); pthread_mutex_destroy(&w->lock); free(w); return NULL;
+    }
+#endif
     w->master = master;
     w->pos = DSP_BLOCK;
     for (int i = 0; i < NPARAMS; i++) w->last_pos[i] = w->last_norm[i] = -1;

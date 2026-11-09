@@ -51,6 +51,7 @@ static const char *sounds[]={"KICK","MBRANE","CL HAT","OP HAT","CLAP","RIM","CRA
 static const double step_beats[]={0.125,0.25,0.5,1.,2.};
 static _Atomic unsigned slots;
 typedef struct {int f[NF];uint32_t pattern;int values[32][5];signed char gates[32];int playmode,auto_rotate,shift,every,hold;unsigned seed;double origin;} Lane;
+#include "variations_types.h"
 typedef struct {int line,source,repeat,velocity;double beat,duration;int kind;} Hit;
 typedef struct {double requested;int actual,line,step,view,lo,hi;} QMove;
 typedef struct {
@@ -69,6 +70,8 @@ typedef struct {
  Lane lane[LANES];int selected,mode,channel,bank,step,rhythm,dialog,row,panic;int scale_choice,scale_start,scale_applied_choice,scale_applied_start;unsigned scale_ui_pending;int mod_pick;unsigned ui_actions;
  int edit_view,edit_tool,state_valid;
  int rand_mode,rand_line;unsigned rand_mask;
+ void *guidance_worker;int guidance_async;unsigned control_revision,guidance_sequence,guidance_stamp;
+ Variation alternate[LANES];unsigned variation_ready;unsigned char variation_bank[LANES];int variation_mask,variation_strength,variation_ui,variation_status;int rand_touch,rand_touch_long;double rand_touch_at;
  QMove qmove[8];unsigned q_valid;
  unsigned revision,random,errors;int slot;
  snd_seq_t *seq;int port,queue;snd_seq_remove_events_t *rem;
@@ -134,6 +137,7 @@ static void rand_press(Engine *e){
  rand_clear(e);changed_lane(e,e->selected);
 }
 static void mod_notify_selected(Engine *e);
+static void variation_reset(Engine *e);
 /* PATTERN selection is independent of MOD: do not invalidate every visual readout. */
 static void changed_selected(Engine *e){notify_id(e,SELECT16_ID);for(int id=LANES*NF;id<LEGACY_CHANGED+14;id++)notify_id(e,id);for(int q=0;q<8;q++)notify_id(e,LEGACY_CHANGED+14+LANES*4+LANES*160+q);e->revision++;}
 static void changed_lane(Engine *e,int line){for(int f=0;f<NF;f++)notify_id(e,line*NF+f);for(int f=0;f<4;f++)notify_id(e,LEGACY_CHANGED+14+line*4+f);changed_selected(e);}
@@ -182,6 +186,7 @@ static int release(Engine *e,int i){
  e->release_pending|=1u<<i;return 0;
 }
 static void panic_owned(Engine *e){memset(e->mod_latch_valid,0,sizeof e->mod_latch_valid);for(int i=0;i<LANES;i++)release(e,i);e->panic=0;}
+static void variation_reset(Engine *e){memset(e->alternate,0,sizeof e->alternate);memset(e->variation_bank,0,sizeof e->variation_bank);e->variation_ready=0;e->variation_mask=6;e->variation_strength=0;e->variation_ui=1;e->rand_touch=e->rand_touch_long=0;}
 static int parse_suffix(const char *,const char *,int,int *);
 static int parse_lane(const char *,int *,int *);
 static int lane_prefix(const char *,int *,const char **);
@@ -195,6 +200,8 @@ static const int mod_lo[MOD_FIELDS],mod_hi[MOD_FIELDS];
 static int scale_notes(int,int,int [LANES]);
 #include "evolution.h"
 #include "mod_lfo.h"
+#include "rhythm_knowledge.h"
+#include "variations.h"
 /* HOLD uses the same queue and timestamps as GATE; no additional MIDI path.
    Each effective retrigger releases this lane first. Other lanes retain ownership. */
 static void trigger(Engine *e,const Hit *h,double bpm,double at,double max_duration){
@@ -225,8 +232,8 @@ static void *create(const char *dir){(void)dir;Engine *e=calloc(1,sizeof *e);if(
  if(snd_seq_open(&e->seq,"default",SND_SEQ_OPEN_OUTPUT,SND_SEQ_NONBLOCK)>=0){char name[64];snprintf(name,sizeof name,"piClideaN MPC%s%d",e->slot?" ":"",e->slot?e->slot+1:1);if(e->slot==0)strcpy(name,"piClideaN MPC");snd_seq_set_client_name(e->seq,name);e->port=snd_seq_create_simple_port(e->seq,"Out",SND_SEQ_PORT_CAP_READ|SND_SEQ_PORT_CAP_SUBS_READ,SND_SEQ_PORT_TYPE_MIDI_GENERIC|SND_SEQ_PORT_TYPE_APPLICATION);char qname[80];snprintf(qname,sizeof qname,"%s Clock",name);e->queue=snd_seq_alloc_named_queue(e->seq,qname);
  if(snd_seq_set_client_pool_output(e->seq,4096)<0)e->errors++;
  if(e->port>=0&&e->queue>=0&&snd_seq_remove_events_malloc(&e->rem)>=0&&snd_seq_queue_status_malloc(&e->queue_status)>=0){if(snd_seq_start_queue(e->seq,e->queue,NULL)<0||snd_seq_drain_output(e->seq)<0){snd_seq_close(e->seq);e->seq=NULL;e->errors++;}}else{snd_seq_close(e->seq);e->seq=NULL;e->errors++;}}
- else{e->seq=NULL;e->errors++;}mod_preview_start(e);changed_all(e);return e;}
-static void destroy(void *inst){Engine *e=inst;if(!e)return;mod_preview_stop(e);panic_owned(e);for(int retry=0;retry<2&&e->release_pending;retry++)for(int i=0;i<LANES;i++)if(e->release_pending&(1u<<i))release(e,i);if(e->seq){if(e->queue>=0){snd_seq_stop_queue(e->seq,e->queue,NULL);snd_seq_free_queue(e->seq,e->queue);}snd_seq_close(e->seq);}if(e->rem)snd_seq_remove_events_free(e->rem);if(e->queue_status)snd_seq_queue_status_free(e->queue_status);if(e->slot>=0)atomic_fetch_and(&slots,~(1u<<e->slot));free(e);}
+ else{e->seq=NULL;e->errors++;}variation_reset(e);e->guidance_async=1;guidance_start(e);mod_preview_start(e);changed_all(e);return e;}
+static void destroy(void *inst){Engine *e=inst;if(!e)return;guidance_stop(e);mod_preview_stop(e);panic_owned(e);for(int retry=0;retry<2&&e->release_pending;retry++)for(int i=0;i<LANES;i++)if(e->release_pending&(1u<<i))release(e,i);if(e->seq){if(e->queue>=0){snd_seq_stop_queue(e->seq,e->queue,NULL);snd_seq_free_queue(e->seq,e->queue);}snd_seq_close(e->seq);}if(e->rem)snd_seq_remove_events_free(e->rem);if(e->queue_status)snd_seq_queue_status_free(e->queue_status);if(e->slot>=0)atomic_fetch_and(&slots,~(1u<<e->slot));free(e);}
 static void midi(void *inst,const uint8_t *msg,int len){(void)inst;(void)msg;(void)len;/* no MIDI echo, no second note path */}
 /* Parse a complete lane index: l9 and l10 must never alias. */
 static int lane_prefix(const char *key,int *line,const char **suffix){
@@ -255,15 +262,10 @@ static int scale_notes(int choice,int start,int out[LANES]){if(choice<0||choice>
 static int scale_pending(const Engine *e){return (e->scale_choice!=e->scale_applied_choice?1:0)|(e->scale_start!=e->scale_applied_start?2:0);}
 static void scale_apply(Engine *e,int reset){int notes[LANES];if(!scale_notes(reset?0:e->scale_choice,e->scale_start,notes))return;for(int i=0;i<LANES;i++){char key[24],value[12];snprintf(key,sizeof key,"l%d_dnote",i);snprintf(value,sizeof value,"%d",notes[i]);set_param(e,key,value);}if(reset){e->scale_choice=0;e->scale_start=36;e->scale_ui_pending|=3;}e->scale_applied_choice=e->scale_choice;e->scale_applied_start=e->scale_start;e->scale_ui_pending|=4;}
 /* Explicitly confirmed global reset; musical changes are bounded to 16 lanes. */
-static void random_all(Engine *e){
- int notes[LANES],mutes[LANES];for(int i=0;i<LANES;i++){notes[i]=note(e,i);mutes[i]=e->lane[i].f[12];}
- e->panic=1;e->release_pending=(1u<<LANES)-1;rand_clear(e);
- for(int i=0;i<LANES;i++){Lane *l=&e->lane[i];for(int k=0;k<32;k++)for(int f=0;f<5;f++)if(l->values[k][f]>=0)notify_id(e,LEGACY_CHANGED+14+LANES*4+i*160+k*5+f);init_lane(l,i);l->f[12]=mutes[i];l->f[8]=l->f[9]=notes[i];l->f[0]=1+rng(e)%32;l->f[1]=density_limit(l->f[0])?1+rng(e)%density_limit(l->f[0]):0;l->f[2]=rng(e)%l->f[0];l->f[3]=rng(e)%5;l->f[4]=100;l->f[5]=0;l->f[6]=100;l->f[7]=50;l->hold=0;pattern(l);changed_lane(e,i);notify_id(e,HOLD_ID+i);e->head[i]=-1;e->display_tick[i]=0;e->ui_offset[i]=0;e->reset_at[i]=-1;
- }
- mod_init(e);mod_notify_selected(e);e->step=0;e->scale_choice=e->scale_applied_choice;e->scale_start=e->scale_applied_start;e->scale_ui_pending=7;e->dialog=0;changed_dialog(e);
-}
+static void random_all(Engine *e){guided_eight(e);}
 static const char *mod_pick_key(Engine *e){static const char *keys[]={"mod0_wave","mod0_sync","mod0_rate","mod0_dest","mod1_wave","mod1_sync","mod1_rate","mod1_dest"};return keys[clampi(e->mod_pick,0,7)];}
-static void set_param(void *inst,const char *key,const char *val){Engine *e=inst;if(!strcmp(key,"state")){e->state_valid=(!strncmp(val,"PICN2 ",6)||!strncmp(val,"PICN3 ",6)||!strncmp(val,"PICN4 ",6)||!strncmp(val,"PICN5 ",6)||!strncmp(val,"PICN6 ",6)||!strncmp(val,"PICN7 ",6))?read_evolution(e,val):read_state(e,val);if(e->state_valid){if(!strncmp(val,"PICN1 ",6))e->count_in_mode=0;count_in_reset(&e->count_in);rand_clear(e);e->q_valid=0;e->visual_ready=0;e->playing=0;for(int k=0;k<LANES;k++){e->reset_at[k]=-1;e->head[k]=-1;e->display_tick[k]=0;e->ui_offset[k]=0;}}return;}if(e->rand_mode&&key[0]=='q'&&key[1]>='0'&&key[1]<='7'&&!key[2])return;if(q_set(e,key,val))return;int v;if(!integer(val,&v))return;int i,j;
+static void set_param_impl(void *inst,const char *key,const char *val){Engine *e=inst;if(!strcmp(key,"state")){e->state_valid=(!strncmp(val,"PICN8 ",6)||!strncmp(val,"PICN2 ",6)||!strncmp(val,"PICN3 ",6)||!strncmp(val,"PICN4 ",6)||!strncmp(val,"PICN5 ",6)||!strncmp(val,"PICN6 ",6)||!strncmp(val,"PICN7 ",6))?read_evolution(e,val):read_state(e,val);if(e->state_valid){if(!strncmp(val,"PICN1 ",6)){e->count_in_mode=0;variation_reset(e);}count_in_reset(&e->count_in);rand_clear(e);e->q_valid=0;e->visual_ready=0;e->playing=0;for(int k=0;k<LANES;k++){e->reset_at[k]=-1;e->head[k]=-1;e->display_tick[k]=0;e->ui_offset[k]=0;}}return;}if(e->dialog==7&&((key[0]=='q'&&key[1]>='0'&&key[1]<='7'&&!key[2])||!strncmp(key,"sel_",4)))return;if(e->rand_mode&&key[0]=='q'&&key[1]>='0'&&key[1]<='7'&&!key[2])return;if(q_set(e,key,val))return;int v;if(!integer(val,&v))return;int i,j;
+ if(variation_set(e,key,v))return;
  if(!strcmp(key,"can_redo")){int n=clampi(v,0,2);if(n!=e->count_in_mode){e->count_in_mode=n;e->count_in.waiting=0;notify_id(e,LEGACY_CHANGED+11);}return;}
 
  if(!strcmp(key,"open_bank")){if(v>0){e->dialog=3;changed_dialog(e);}return;}
@@ -318,7 +320,8 @@ static void set_param(void *inst,const char *key,const char *val){Engine *e=inst
  if(!strcmp(key,"half")||!strcmp(key,"double"))changed_lane(e,e->selected);
  else changed_selected(e);
 }
-static int get_param(void *inst,const char *key,char *b,int size){if(size<=0)return 0;Engine *e=inst;int n=-1,i,j;int end=0;if(sscanf(key,"g%d_%d%n",&i,&j,&end)==2&&key[end]==0&&i>=0&&i<8&&j>=0&&j<32){mod_preview(e,e->mod_selected);return snprintf(b,size,"%d",mod_segment(e,e->mod_selected,(i*32+j)/128,(i*32+j)%128));}Lane *l=&e->lane[e->selected];
+static void set_param(void *inst,const char *key,const char *val){Engine *e=inst;unsigned before=e->revision,sequence=e->guidance_sequence;set_param_impl(inst,key,val);if(before!=e->revision)e->control_revision++;if(sequence!=e->guidance_sequence)e->guidance_stamp=e->control_revision;}
+static int get_param(void *inst,const char *key,char *b,int size){if(size<=0)return 0;Engine *e=inst;int vr=variation_get(e,key,b,size);if(vr>=0)return vr;int n=-1,i,j;int end=0;if(sscanf(key,"g%d_%d%n",&i,&j,&end)==2&&key[end]==0&&i>=0&&i<8&&j>=0&&j<32){mod_preview(e,e->mod_selected);return snprintf(b,size,"%d",mod_segment(e,e->mod_selected,(i*32+j)/128,(i*32+j)%128));}Lane *l=&e->lane[e->selected];
  if(size<=0)return 0;
  if(!strcmp(key,"rand_mode"))return snprintf(b,size,"%d",e->rand_mode);
  if(parse_suffix(key,"rand_pick",8,&i))return snprintf(b,size,"%d",e->rand_mode&&!!(e->rand_mask&(1u<<i)));
@@ -358,7 +361,8 @@ static int get_param(void *inst,const char *key,char *b,int size){if(size<=0)ret
  return n>=0?snprintf(b,size,"%d",n):0;
 }
 int mpc_engine_changed(void *inst,char *key,int len){
- Engine *e=inst;
+ Engine *e=inst;guidance_poll(e);
+ if(e->variation_ui){static const char *keys[]={"redo","rhythm_choice","rand_pick4","rand_pick5","rand_pick6","rand_pick7","can_undo","undo"};int n=e->variation_ui-1;e->variation_ui++;if(n<8)return snprintf(key,len,"%s",keys[n]);e->variation_ui=0;}
  if(e->ui_actions){e->ui_actions=0;return snprintf(key,len,"can_undo");}
  if(e->scale_ui_pending){unsigned bit=e->scale_ui_pending&1?1:e->scale_ui_pending&2?2:4;e->scale_ui_pending&=~bit;return snprintf(key,len,"%s",bit==1?"choose_sound":bit==2?"edit_row":"choose_target");}
  while(e->changes>0){
@@ -466,7 +470,7 @@ static void visual_snapshot(Engine *e,int frames,int force){
  e->visual_ready=1;e->visual_revision=e->revision;
 }
 static void song_pos(void *inst,double ppq,double bpm,int playing,int frames){
- Engine *e=inst;
+ Engine *e=inst;guidance_poll(e);
  mod_advance(e,frames,bpm);
  if(e->panic)panic_owned(e);
  for(int i=0;i<LANES;i++)if((e->release_pending&(1u<<i))||(e->active_note[i]>=0&&!audible(e,i)))release(e,i);

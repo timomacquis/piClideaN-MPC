@@ -78,18 +78,20 @@
   },
   {
     "key": "rhythm_choice",
-    "name": "Rhythm",
+    "name": "Variation",
     "min": 0,
-    "max": 5,
+    "max": 2,
     "default": 0,
     "display": "int",
-    "dynamic_display": true
+    "dynamic_display": true,
+    "refresh_display": false,
+    "poll": false
   },
   {
     "key": "dialog",
     "name": "Dialog",
     "min": 0,
-    "max": 6,
+    "max": 7,
     "default": 0,
     "display": "int",
     "poll": false
@@ -5262,25 +5264,28 @@
   },
   {
     "key": "undo",
-    "name": "UNDO",
+    "name": "VAR",
     "min": 0,
     "max": 1,
     "default": 0,
     "display": "int",
     "momentary": true,
     "refresh_display": false,
-    "hold_ms": 100
+    "hold_ms": 100,
+    "poll": false
   },
   {
     "key": "redo",
-    "name": "REDO",
+    "name": "A/B",
     "min": 0,
     "max": 1,
     "default": 0,
     "display": "int",
-    "momentary": true,
+    "momentary": false,
     "refresh_display": false,
-    "hold_ms": 100
+    "hold_ms": 100,
+    "dynamic_display": true,
+    "poll": false
   },
   {
     "key": "reset_phase",
@@ -5332,7 +5337,8 @@
     "max": 7,
     "default": 0,
     "display": "int",
-    "poll": false
+    "poll": false,
+    "dynamic_display": true
   },
   {
     "key": "can_redo",

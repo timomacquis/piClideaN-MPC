@@ -5,9 +5,9 @@ B=Path(__file__).resolve().parents[1]
 def sha(data):return hashlib.sha256(data).hexdigest()
 def inputs():
     paths=[]
-    for folder in ['src','scripts','third_party']:
+    for folder in ['src','scripts','third_party','presets']:
         paths.extend(p for p in (B/folder).rglob('*') if p.is_file() and '__pycache__' not in p.parts and not p.name.endswith('.pyc'))
-    paths.extend(B/n for n in ['params.json','params.lock','vst.json','reference/skin-base.zip','reference/DRUMTRACK-REFERENCE.json'])
+    paths.extend(B/n for n in ['params.json','params.lock','vst.json','reference/skin-base.zip','reference/DRUMTRACK-REFERENCE.json','reference/groove/EXTRACTION.json'])
     paths.extend(p for p in (B/'reference/fonts').rglob('*') if p.is_file())
     result={}
     for p in sorted(set(paths)):

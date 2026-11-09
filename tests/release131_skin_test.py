@@ -25,5 +25,5 @@ V=env['V'];V[K['edit_view']]=1;V[K['preview0']]=1;V[K['step_custom0']]=1;V[K['st
 V[K['q3']]=127*(80-10)/85;env['texts']['q3']='80';params=env['P'];params[K['q3']]['name']='GATE · STEP'
 canvas=Image.new('RGB',(1280,628),'#171a1e')
 for c in defs[page['tabs'][0]['tabName']]['componentsData']:env['draw_control'](canvas,c)
-canvas.save(B/'build/reports/PREVIEW-EDIT-GATE-1.3.1.png')
+canvas.save(B/'Validation/PREVIEW-EDIT-GATE-1.3.1.png')
 print('PASS 4096 stable parameter indices / five EDIT locks / correct retired-handle range / cached art / single touch owners')

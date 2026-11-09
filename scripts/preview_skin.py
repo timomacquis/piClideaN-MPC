@@ -20,10 +20,13 @@ for i in range(16):
         for j in range(32):
             V[K[f'cell{j}']]=(pattern(n,k,r,j) if j<n else 8)+(2 if j==0 else 0)
             V[K[f'editcell{j}']]=(pattern(n,k,r,j) if j<n else 16)+(2 if j==0 else 0)
+for j in range(2):
+    for k in range(128):
+        a=round((math.sin(k*math.tau*16/128)*.5+1)*15.5);b=round((math.sin((k+1)*math.tau*16/128)*.5+1)*15.5);V[K[f'g{j*4+k//32}_{k%32}']]=a*32+b
 for k in ['steps','hits','rotate','division','velocity','humanize','prob','gate']: V[K['sel_'+k]]=V[K['l0_'+k]]
 V[K['step_velocity']]=V[K['l0_velocity']]
 V[K['step_prob']]=V[K['l0_prob']]
-texts={'line_label':'01 - A01','target_label':'DRUM TRACK / CH 1 / NOTE 36','status':'STOP / MIDI TO QUALIFY','step_label':'STEP 01 / HIT','mapping_label':'INCIPIENCE NOTES','port_label':'piClideaN MPC Out','step_scope':'SELECTED STEP / A01 /','line_scope':'LINE DEFAULTS / A01','phase_label':'CYCLE 1 / SHIFT 0','play_mode':'FWD','edit_tool':'SELECT','rhythm_choice':'FOUR ON THE FLOOR'}
+texts={'mod_tempo':'4 BARS / 120 BPM','line_label':'01 - A01','target_label':'DRUM TRACK / CH 1 / NOTE 36','status':'STOP / MIDI TO QUALIFY','step_label':'STEP 01 / HIT','mapping_label':'INCIPIENCE NOTES','port_label':'piClideaN MPC Out','step_scope':'SELECTED STEP / A01 /','line_scope':'LINE DEFAULTS / A01','phase_label':'CYCLE 1 / SHIFT 0','play_mode':'FWD','edit_tool':'SELECT','rhythm_choice':'FOUR ON THE FLOOR'}
 for i in range(16):texts[f'name{i}']=f'A{i+1:02}'
 def value(handle):
     m=re.fullmatch(r'Parameter (\d+)',handle)
@@ -41,24 +44,23 @@ def draw_control(canvas,c,ox=0,oy=0,handle=None):
     if kind in D:
         for sub in D[kind]['componentsData']:draw_control(canvas,sub,x,y,handles)
     elif kind=='Image':
-        canvas.paste(Image.open(A/d['image']).convert('RGB'),(x,y))
+        im=Image.open(A/d['image']).convert('RGBA');canvas.paste(im,(x,y),im)
     elif kind=='Button':
         on=idx is not None and V[idx]==d['buttonId']
         canvas.paste(Image.open(A/d['onImage' if on else 'offImage']).convert('RGB'),(x,y))
     elif kind=='Knob':
         p=P[idx] if idx is not None else {'min':0,'max':1};lo=p.get('min',0);hi=len(p['options'])-1 if 'options'in p else p.get('max',1)
-        last=d['numFrames']-1 if d['filmStrip']=='track_states_128.png' else d['numFrames']
+        last=d['numFrames']-1 if d['filmStrip']=='track_states_128.png' or d['filmStrip'].startswith('variation_step_atlas') else d['numFrames']
         frame=round(last*((V[idx] if idx is not None else 0)-lo)/(hi-lo)) if hi!=lo else 0
-        strip=Image.open(A/d['filmStrip']).convert('RGB');canvas.paste(strip.crop((0,frame*h,w,(frame+1)*h)),(x,y))
+        strip=Image.open(A/d['filmStrip']).convert('RGBA');tile=strip.crop((0,frame*h,w,(frame+1)*h));canvas.paste(tile,(x,y),tile)
     elif kind=='Label' and idx is not None:
         p=P[idx];v=V[idx];style=d['textStyle'];fs=round(style['font']['height']);font=ImageFont.truetype(str(B/'reference/fonts/TitilliumWeb-Regular.ttf'),fs)
         if d['type']=='Name':t=p['name']
         elif p['key'] in texts:t=texts[p['key']]
         elif 'options'in p:t=p['options'][int(v)]
         else:t=str(v)
-        colour='#'+style['colour'][-6:];layer=Image.new('RGBA',(w,h));dr=ImageDraw.Draw(layer);dr.text((0,h/2),t,font=font,fill=colour,anchor='lm');canvas.paste(layer,(x,y),layer)
+        colour='#'+style['colour'][-6:];layer=Image.new('RGBA',(w,h));dr=ImageDraw.Draw(layer);dr.text((w/2 if 'horizontallyCentred' in style.get('justification','') else 0,h/2),t,font=font,fill=colour,anchor='mm' if 'horizontallyCentred' in style.get('justification','') else 'lm');canvas.paste(layer,(x,y),layer)
 pages=[dict(p) for p in J['tabs']];pages.append(dict(pages[0],preview_name='PATTERN-GENERATE'));pages.append(dict(pages[0],preview_name='PATTERN-ACTIVITY'))
-(B/'docs/images').mkdir(parents=True,exist_ok=True)
 for page in pages:
     for i in range(16):V[K[f'lane_flash{i}']]=int(page.get('preview_name')=='PATTERN-ACTIVITY' and i in (0,2,4))
     V[K['edit_view']]=0 if page.get('preview_name')=='PATTERN-GENERATE' else 1
@@ -66,8 +68,9 @@ for page in pages:
     for c in D[name]['componentsData']:draw_control(native,c)
     out=Image.new('RGB',(800,480),'#15171a');out.paste(native.resize((800,393),Image.Resampling.LANCZOS),(0,47));dr=ImageDraw.Draw(out);ft=ImageFont.truetype(str(B/'reference/fonts/TitilliumWeb-Regular.ttf'),17)
     dr.text((14,12),DISPLAY_NAME+' / OFFLINE SKIN LAYOUT',font=ft,fill='#e8e5d0')
-    for i,n in enumerate([t['tabName'] for t in J['tabs']]):dr.text((i*160+12,451),n,font=ft,fill='#fff' if n==name else '#92999e')
-    dr.line((page['fnKeyIndex']*160,440,page['fnKeyIndex']*160+159,440),fill='#f2474d',width=2)
-    filename={'PATTERN':'pattern-edit.png','PATTERN-GENERATE':'pattern-line.png','PATTERN-ACTIVITY':'activity.png','TR 01-08':'tracks.png','TR 09-16':'tracks-09-16.png','SET 01-08':'setup.png','SET 09-16':'setup-09-16.png'}[page.get('preview_name',name)]
-    out.save(B/'docs/images'/filename)
-print('Five offline native-layout previews generated')
+    for i,n in enumerate([t['tabName'] for t in J['tabs']]):dr.text((i*(800//len(J['tabs']))+6,451),n,font=ft,fill='#fff' if n==name else '#92999e')
+    dr.line((page['fnKeyIndex']*(800//len(J['tabs'])),440,page['fnKeyIndex']*(800//len(J['tabs']))+(800//len(J['tabs']))-1,440),fill='#f2474d',width=2)
+    out.save(B/'Validation'/('PREVIEW-'+page.get('preview_name',name)+'.png'))
+    if name=='01 - 08':out.save(B/'Validation/PREVIEW-TRACKS.png')
+    if name=='CONFIG':out.save(B/'Validation/PREVIEW-SETUP.png')
+print(f'{len(pages)} offline native-layout previews generated')

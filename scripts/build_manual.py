@@ -10,7 +10,7 @@ def inline(s):
 rows=[];paragraph=[];in_list=False
 def flush():
  if paragraph:rows.append('<p>'+inline(' '.join(paragraph))+'</p>');paragraph.clear()
-for line in (B/'docs/USER-MANUAL.md').read_text(encoding='utf-8').splitlines():
+for line in (B/'docs/MODE-EMPLOI.md').read_text().splitlines():
  image=re.fullmatch(r'!\[(.*?)\]\((.*?)\)',line)
  heading=re.match(r'^(#{1,3}) (.*)',line)
  if not line or heading or image or line.startswith('- '):
@@ -29,5 +29,5 @@ for line in (B/'docs/USER-MANUAL.md').read_text(encoding='utf-8').splitlines():
 flush()
 if in_list:rows.append('</ul>')
 css='body{font:17px/1.6 system-ui,sans-serif;max-width:1000px;margin:36px auto;padding:0 24px;color:#20242a}h1,h2,h3{line-height:1.25}h2{margin-top:2em;border-bottom:2px solid #b92d38;padding-bottom:8px}figure{margin:24px 0}img{max-width:100%;height:auto}figcaption{color:#555;font-style:italic;font-size:14px}code{overflow-wrap:anywhere}@media print{body{font-size:11pt;margin:0}h2,h3{break-after:avoid}figure{break-inside:avoid}}'
-(B/'docs/USER-MANUAL.html').write_text('<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+html.escape(DISPLAY_NAME+' '+VERSION)+' — User Manual</title><style>'+css+'</style><body>'+'\n'.join(rows)+'</body></html>',encoding='utf-8')
+(B/'docs/MODE-EMPLOI.html').write_text('<!doctype html><html lang="fr"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>'+html.escape(DISPLAY_NAME+' '+VERSION)+' — Mode d’emploi</title><style>'+css+'</style><body>'+'\n'.join(rows)+'</body></html>')
 print('Standalone manual generated with embedded offline previews')

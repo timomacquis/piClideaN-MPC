@@ -1,6 +1,6 @@
 """One identity for the engine, native content and distribution. ASCII source code."""
-VERSION = '1.3.2'
-DISPLAY_NAME = '\u03c0ClideaN MPC'
+VERSION = '1.3.4'
+DISPLAY_NAME = '\u03c0ClideaN'
 TECHNICAL_NAME = 'piClideaN MPC'
 FOLDER = 'Timo - VST - ' + DISPLAY_NAME
 SKIN_IDENTIFIER = 'Timo.vst.' + DISPLAY_NAME.lower().replace(' ', '')

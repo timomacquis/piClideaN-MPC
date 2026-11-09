@@ -1,3 +1,22 @@
+# πClideaN 1.3.4
+
+- New coherent skin, clearer values and contextual physical Q-Links.
+- Seven native presets, including INIT and musical starting points.
+- Per-line rhythmic A/B variants and COPY A → B.
+- Guided ALTER: choose STEPS, HITS, ROTATE and DIVISION, with LIGHT / MEDIUM / FREE strength.
+- Rdm 8 generates complementary patterns on lanes 01–08, preserving their notes and MUTE states. Lanes 09–16 remain untouched.
+- Compact, attributed Groove MIDI Dataset statistics guide rhythmic preferences; no neural model or raw MIDI corpus runs on the device.
+- Separate VAR and two-stage RAND buttons; ½ and ×2 share one slot. No long press required.
+- Cached graphics, bounded UI notifications and background candidate search.
+
+Generated patterns remain capped at 75% active steps. A/B changes geometry and step expression; notes, LINE settings and modulation remain shared.
+
+PICN8 state preserves all 4096 parameter indices and reads older PICN1–7 states. Older binaries cannot load PICN8: keep original project copies.
+
+Gen1 / Force and Gen2 ARM64 packages are provided. The author validated the Gen1 candidate in a musical session on Force OS 3.10.0.49. Gen2 hardware and an exact-release install/uninstall cycle are not newly qualified.
+
+---
+
 # Version 1.3.2
 
 - Preserve independent lane cycles across host transport loop boundaries. A 10-step lane now continues with step 05 after a 64-step host loop instead of restarting at step 01.

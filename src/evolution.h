@@ -108,7 +108,7 @@ static int evolution_get(Engine *e,const char *key,char *b,int size){Lane *l=&e-
 /* PICN4 appends sixteen HOLD flags; older PICN1/2/3 load with GATE. */
 static int write_evolution(Engine *e,char *b,int size){int off=0;
 #define PUT(...) do{int wrote=snprintf(b+off,size-off,__VA_ARGS__);if(wrote<0||wrote>=size-off)return 0;off+=wrote;}while(0)
- PUT("PICN7 %d %d %d %d %d %d %d 1 ",e->selected,e->mode,e->channel,e->bank,e->step,e->rhythm,e->row);
+ PUT("%s %d %d %d %d %d %d %d 1 ",e->variation_ready?"PICN8":"PICN7",e->selected,e->mode,e->channel,e->bank,e->step,e->rhythm,e->row);
  for(int i=0;i<LANES;i++)for(int j=0;j<NF;j++)PUT("%d ",e->lane[i].f[j]);
  PUT("%d %d ",e->edit_view,e->edit_tool);
  for(int i=0;i<LANES;i++){Lane *l=&e->lane[i];PUT("%d %d %d %d %u %.17g ",l->playmode,l->auto_rotate,l->shift,l->every,l->seed,l->origin);for(int j=0;j<32;j++)for(int k=0;k<5;k++)PUT("%d ",l->values[j][k]);}
@@ -118,12 +118,29 @@ static int write_evolution(Engine *e,char *b,int size){int off=0;
  for(int s=0;s<MOD_SLOTS;s++)for(int j=0;j<2;j++)for(int k=0;k<4;k++)PUT("%d ",e->mod[s].osc[j].extra[k]);
  PUT("GATES ");for(int i=0;i<LANES;i++)for(int j=0;j<32;j++)PUT("%d ",e->lane[i].gates[j]);
  if(e->count_in_mode)PUT("COUNTIN %d ",e->count_in_mode);
+ if(e->variation_ready){static const char hex[]="0123456789abcdef";
+#define ABPUT(value) do{unsigned byte=(unsigned)(value);if(byte>255||off+2>=size)return 0;b[off++]=hex[byte>>4];b[off++]=hex[byte&15];b[off]=0;}while(0)
+ PUT("AB1 %u ",e->variation_ready);for(int i=0;i<LANES;i++)if(e->variation_ready&(1u<<i)){Variation *v=&e->alternate[i];ABPUT(e->variation_bank[i]);for(int f=0;f<4;f++)ABPUT(v->geometry[f]);for(int s=0;s<32;s++)for(int f=0;f<5;f++)ABPUT(v->values[s][f]+1);for(int s=0;s<32;s++)ABPUT(v->gates[s]+1);PUT(" ");}
+#undef ABPUT
+ }
  PUT("END");return off;
 #undef PUT
 }
 static int read_number(const char **p,double *n){char *end;errno=0;*n=strtod(*p,&end);if(errno||end==*p||!isfinite(*n)||(*end&&*end!=' '))return 0;*p=end;while(**p==' ')(*p)++;return 1;}
 static int read_int(const char **p,int low,int high,int *n){double d;if(!read_number(p,&d)||d<low||d>high||d!=floor(d))return 0;*n=(int)d;return 1;}
-static int read_evolution(Engine *e,const char *value){const char *p=value+6;int extended=!strncmp(value,"PICN7 ",6);int slot_format=extended||!strncmp(value,"PICN6 ",6);if(!strncmp(value,"PICN5 ",6))return 0;int has_mod=slot_format;int has_hold=has_mod||!strncmp(value,"PICN4 ",6);ModLane mods[MOD_SLOTS];int pads[MOD_SLOTS]={-1,-1,-1,-1},selected_mod=0;for(int i=0;i<MOD_SLOTS;i++)mod_defaults(&mods[i]);int count=(has_hold||!strncmp(value,"PICN3 ",6))?LANES:8;int h[8],view,tool;Lane lanes[LANES];for(int i=0;i<LANES;i++)init_lane(&lanes[i],i);int highs[]={count-1,1,15,7,31,5,count-1,1};
+/* Compact A/B payload: 197 bytes per alternate lane, hex encoded. */
+static int ab_hex(char c){return c>='0'&&c<='9'?c-'0':c>='a'&&c<='f'?c-'a'+10:-1;}
+static int ab_byte(const char **p,int *out){int a=ab_hex((*p)[0]),b=(*p)[0]?ab_hex((*p)[1]):-1;if(a<0||b<0)return 0;*out=a*16+b;*p+=2;return 1;}
+static int ab_parse(const char **p,unsigned *ready,Variation alt[LANES],unsigned char bank[LANES]){int mask;if(strncmp(*p,"AB1 ",4))return 0;*p+=4;if(!read_int(p,0,65535,&mask))return 0;*ready=(unsigned)mask;
+ for(int i=0;i<LANES;i++)if(mask&(1<<i)){int value;if(!ab_byte(p,&value)||value>1)return 0;bank[i]=value;
+ for(int f=0;f<4;f++){if(!ab_byte(p,&value)||value<mins[f]||value>maxs[f])return 0;alt[i].geometry[f]=value;}
+ if(alt[i].geometry[1]>alt[i].geometry[0]||alt[i].geometry[2]>=alt[i].geometry[0])return 0;
+ for(int s=0;s<32;s++)for(int f=0;f<5;f++){if(!ab_byte(p,&value))return 0;value--;int hi=f==0?1:f==1?127:f==2?100:f==3?8:150;if(value< -1||value>hi||((f==1||f==3)&&value==0))return 0;alt[i].values[s][f]=value;}
+ for(int s=0;s<32;s++){if(!ab_byte(p,&value))return 0;value--;if(value< -1||value>95||(value>=0&&value<10))return 0;alt[i].gates[s]=(signed char)value;}
+ if(**p!=' ')return 0;(*p)++;
+ }return 1;
+}
+static int read_evolution(Engine *e,const char *value){const char *p=value+6;int ab_format=!strncmp(value,"PICN8 ",6);int extended=ab_format||!strncmp(value,"PICN7 ",6);int slot_format=extended||!strncmp(value,"PICN6 ",6);if(!strncmp(value,"PICN5 ",6))return 0;int has_mod=slot_format;int has_hold=has_mod||!strncmp(value,"PICN4 ",6);ModLane mods[MOD_SLOTS];int pads[MOD_SLOTS]={-1,-1,-1,-1},selected_mod=0;for(int i=0;i<MOD_SLOTS;i++)mod_defaults(&mods[i]);int count=(has_hold||!strncmp(value,"PICN3 ",6))?LANES:8;int h[8],view,tool;Lane lanes[LANES];for(int i=0;i<LANES;i++)init_lane(&lanes[i],i);int highs[]={count-1,1,15,7,31,5,count-1,1};
  for(int i=0;i<8;i++)if(!read_int(&p,0,highs[i],&h[i]))return 0;if(h[7]!=1)return 0;
  for(int i=0;i<count;i++){for(int j=0;j<NF;j++)if(!read_int(&p,mins[j],maxs[j],&lanes[i].f[j]))return 0;if(lanes[i].f[1]>lanes[i].f[0]||lanes[i].f[2]>=lanes[i].f[0])return 0;pattern(&lanes[i]);}
  if(!read_int(&p,0,1,&view)||!read_int(&p,0,1,&tool))return 0;
@@ -135,7 +152,8 @@ static int read_evolution(Engine *e,const char *value){const char *p=value+6;int
  if(extended){if(strncmp(p,"EXTRA ",6))return 0;p+=6;for(int s=0;s<MOD_SLOTS;s++)for(int j=0;j<2;j++)for(int k=0;k<4;k++)if(!read_int(&p,-100,100,&mods[s].osc[j].extra[k]))return 0;}
  if(!strncmp(p,"GATES ",6)){p+=6;for(int i=0;i<LANES;i++)for(int j=0;j<32;j++){int g;if(!read_int(&p,-1,95,&g)||(g>=0&&g<10))return 0;lanes[i].gates[j]=(signed char)g;}}
  int saved_count_in=0;if(!strncmp(p,"COUNTIN ",8)){p+=8;if(!read_int(&p,0,2,&saved_count_in))return 0;}
+ Variation alternate[LANES]={0};unsigned char banks[LANES]={0};unsigned ready=0;if(ab_format&&!ab_parse(&p,&ready,alternate,banks))return 0;
  if(strcmp(p,"END"))return 0;
  if(!scale_metadata&&count==LANES){int candidate[LANES];for(int sc=0;sc<16;sc++){int first=sc?lanes[0].f[h[1]?9:8]:36;if(!scale_notes(sc,first,candidate))continue;int match=1;for(int i=0;i<LANES;i++)if(candidate[i]!=lanes[i].f[h[1]?9:8])match=0;if(match){saved_scale=sc;saved_start=first;break;}}}
- for(int i=count;i<LANES;i++)lanes[i].f[9]=drum_notes[h[3]*16+i];e->count_in_mode=saved_count_in;count_in_reset(&e->count_in);e->scale_choice=e->scale_applied_choice=saved_scale;e->scale_start=e->scale_applied_start=saved_start;e->scale_ui_pending=7;e->selected=h[0];e->mode=h[1];e->channel=0;e->bank=h[3];e->step=h[4];e->rhythm=h[5];e->row=h[6];e->edit_view=view;e->edit_tool=tool;memcpy(e->lane,lanes,sizeof lanes);normalize_config(e);mod_init(e);memcpy(e->mod,mods,sizeof mods);memcpy(e->mod_pad,pads,sizeof pads);e->mod_selected=selected_mod;for(int i=0;i<MOD_SLOTS;i++)mod_coefficients(e,i);e->dialog=0;e->q_valid=0;e->panic=1;e->valid=0;e->visual_ready=0;e->playing=0;for(int i=0;i<LANES;i++){e->reset_at[i]=-1;e->head[i]=-1;e->display_tick[i]=0;e->ui_offset[i]=0;}changed_all(e);return 1;
+ for(int i=count;i<LANES;i++)lanes[i].f[9]=drum_notes[h[3]*16+i];variation_reset(e);memcpy(e->alternate,alternate,sizeof alternate);memcpy(e->variation_bank,banks,sizeof banks);e->variation_ready=ready;e->count_in_mode=saved_count_in;count_in_reset(&e->count_in);e->scale_choice=e->scale_applied_choice=saved_scale;e->scale_start=e->scale_applied_start=saved_start;e->scale_ui_pending=7;e->selected=h[0];e->mode=h[1];e->channel=0;e->bank=h[3];e->step=h[4];e->rhythm=h[5];e->row=h[6];e->edit_view=view;e->edit_tool=tool;memcpy(e->lane,lanes,sizeof lanes);normalize_config(e);mod_init(e);memcpy(e->mod,mods,sizeof mods);memcpy(e->mod_pad,pads,sizeof pads);e->mod_selected=selected_mod;for(int i=0;i<MOD_SLOTS;i++)mod_coefficients(e,i);e->dialog=0;e->q_valid=0;e->panic=1;e->valid=0;e->visual_ready=0;e->playing=0;for(int i=0;i<LANES;i++){e->reset_at[i]=-1;e->head[i]=-1;e->display_tick[i]=0;e->ui_offset[i]=0;}changed_all(e);return 1;
 }

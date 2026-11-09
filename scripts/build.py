@@ -1,4 +1,4 @@
-"""Local ARMv7 build. Never accesses or restarts a device."""
+"""Local ARMv7 candidate build. Never accesses or restarts a device."""
 from pathlib import Path
 import os,subprocess,sys,json,re,hashlib,struct
 from project_config import VERSION,FOLDER
@@ -8,7 +8,7 @@ if os.environ.get('GEN_VST_RELOCK'):raise SystemExit('Forced parameter relock is
 subprocess.run([sys.executable,str(B/'scripts/generate.py')],check=True)
 subprocess.run([sys.executable,str(B/'scripts/prepare_wrapper.py')],check=True)
 sys.path.insert(0,str(tools));import gen_vst
-params=json.loads((B/'params.json').read_text());keys=[p['key'] for p in params];lock=B/'params.lock'
+params=json.loads((B/'params.json').read_text());assert len(params)<=4096, 'Force native skin parameter budget exceeded (0..4095)';keys=[p['key'] for p in params];lock=B/'params.lock'
 if lock.exists():
  old=lock.read_text().split();assert len(keys)>=len(old) and keys[:len(old)]==old,'Published parameter indices changed'
 gen_vst.check_lock(str(B),params)
@@ -28,15 +28,19 @@ subprocess.run([str(prefix/'bin/arm-linux-gnueabihf-strip'),str(B/'build/piclide
 python=os.environ.get('PICN_SKIN_PYTHON',sys.executable)
 script=str(B/'scripts/build_skin.py')
 if python.lower().endswith('.exe') and script.startswith('/mnt/c/'):script='C:/'+script[len('/mnt/c/'):]
-
 subprocess.run([python,script],check=True,cwd=B)
 readelf=prefix/'bin/arm-linux-gnueabihf-readelf';elf=B/'build/piclidean_mpc.so'
-report=subprocess.check_output([str(readelf),'-h','-d','--version-info','-Ws',str(elf)],env=env,text=True);(B/'build/reports/ELF.txt').write_text(report)
+report=subprocess.check_output([str(readelf),'-h','-d','--version-info','-Ws',str(elf)],env=env,text=True);(B/'Validation/ELF.txt').write_text(report)
 raw=elf.read_bytes();assert raw[:5]==b'\x7fELF\x01' and int.from_bytes(raw[18:20],'little')==40
-info={'version':VERSION,'date':build_date(),'timestamp_utc':timestamp(),'architecture':'ELF32 ARM hard-float','parameters':len(params),'automatable_canonical_parameters':sum(auto),'engine_sha256':hashlib.sha256(raw).hexdigest(),'params_lock_sha256':hashlib.sha256(lock.read_bytes()).hexdigest(),'glibc_versions':sorted(set(re.findall(r'GLIBC_[0-9.]+',report))),'compiler_command':cmd,'hardware_access':False}
+info={'version':VERSION,'date':build_date(),'timestamp_utc':timestamp(),'architecture':'ELF32 ARM hard-float','parameters':len(params),'automatable_canonical_parameters':sum(auto),'engine_sha256':hashlib.sha256(raw).hexdigest(),'params_lock_sha256':hashlib.sha256(lock.read_bytes()).hexdigest(),'glibc_versions':sorted(set(re.findall(r'GLIBC_[0-9.]+',report))),'compiler_command':cmd,'hardware_access':False,'hardware_qualified':False,'implementation_tests_run':False}
+tests=json.loads((B/'Validation/E01-TESTS.json').read_text())
+assert tests['passed'] and not tests['hardware_access']
+assert all(hashlib.sha256((B/p).read_bytes()).hexdigest()==sha for p,sha in tests['input_sha256'].items()), 'E01 tests stale; rerun scripts/test_mod.sh'
+info['implementation_tests_run']=True
+info['test_report']='Validation/E01-TESTS.json'
 skin_receipt=json.loads((B/'build/skin-receipt.json').read_text())
 assert source_inputs==inputs(), 'Build inputs changed during compilation; rebuild required'
 assert skin_receipt['version']==VERSION and skin_receipt['inputs']==inputs(), 'Skin inputs changed during build'
 assert skin_receipt['outputs']==tree(B/'build/skin'/FOLDER), 'Skin output changed during build'
 info['input_hashes']=inputs();info['skin_output_hashes']=skin_receipt['outputs']
-(B/'build/reports/BUILD.json').write_text(json.dumps(info,indent=2)+'\n');print('Built',elf,info['engine_sha256'])
+(B/'Validation/BUILD.json').write_text(json.dumps(info,indent=2)+'\n');print('Built',elf,info['engine_sha256'])

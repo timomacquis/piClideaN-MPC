@@ -1,5 +1,7 @@
 {
   "schema": 1,
+  "id": "drumtrack-empty-reference",
+  "source_project_sha256": "5e8f642254be57bf4bc4d3dfaae39494087648c3ebfe7e73e9479841e7b0c7db",
   "notes": [
     36,
     37,
@@ -129,5 +131,448 @@
     33,
     34,
     35
-  ]
+  ],
+  "routes": [
+    {
+      "pad": 0,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 20,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A01 (Tuning)"
+    },
+    {
+      "pad": 1,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 27,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A02 (Filter Resonance)"
+    },
+    {
+      "pad": 1,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 25,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A02 (Tuning)"
+    },
+    {
+      "pad": 2,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 89,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A03 (Send 2)"
+    },
+    {
+      "pad": 6,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 14,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A07 (Tuning)"
+    },
+    {
+      "pad": 5,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 114,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A06 (Filter Resonance)"
+    },
+    {
+      "pad": 3,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 102,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A04 (Tuning)"
+    },
+    {
+      "pad": 7,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 9,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A08 (Pan)"
+    },
+    {
+      "pad": 2,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 88,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A03 (Send 1)"
+    },
+    {
+      "pad": 6,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 17,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A07 (Send 1)"
+    },
+    {
+      "pad": 5,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 113,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A06 (Filter Cutoff)"
+    },
+    {
+      "pad": 5,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 112,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A06 (Tuning)"
+    },
+    {
+      "pad": 1,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 28,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A02 (Send 1)"
+    },
+    {
+      "pad": 5,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 116,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A06 (Send 2)"
+    },
+    {
+      "pad": 0,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 23,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A01 (Send 1)"
+    },
+    {
+      "pad": 0,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 22,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A01 (Filter Resonance)"
+    },
+    {
+      "pad": 3,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 105,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A04 (Send 1)"
+    },
+    {
+      "pad": 4,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 111,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A05 (Send 2)"
+    },
+    {
+      "pad": 3,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 106,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A04 (Send 2)"
+    },
+    {
+      "pad": 0,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 21,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A01 (Filter Cutoff)"
+    },
+    {
+      "pad": 7,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 83,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A08 (Send 1)"
+    },
+    {
+      "pad": 7,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 82,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A08 (Filter Resonance)"
+    },
+    {
+      "pad": 2,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 86,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A03 (Filter Cutoff)"
+    },
+    {
+      "pad": 5,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 119,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A06 (Pan)"
+    },
+    {
+      "pad": 3,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 104,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A04 (Filter Resonance)"
+    },
+    {
+      "pad": 1,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 26,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A02 (Filter Cutoff)"
+    },
+    {
+      "pad": 3,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 117,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A04 (Pan)"
+    },
+    {
+      "pad": 6,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 16,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A07 (Filter Resonance)"
+    },
+    {
+      "pad": 4,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 107,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A05 (Tuning)"
+    },
+    {
+      "pad": 4,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 118,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A05 (Pan)"
+    },
+    {
+      "pad": 4,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 108,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A05 (Filter Cutoff)"
+    },
+    {
+      "pad": 4,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 109,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A05 (Filter Resonance)"
+    },
+    {
+      "pad": 2,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 85,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A03 (Tuning)"
+    },
+    {
+      "pad": 4,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 110,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A05 (Send 1)"
+    },
+    {
+      "pad": 2,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 90,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A03 (Pan)"
+    },
+    {
+      "pad": 7,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 84,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A08 (Send 2)"
+    },
+    {
+      "pad": 1,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 29,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A02 (Send 2)"
+    },
+    {
+      "pad": 1,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 31,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A02 (Pan)"
+    },
+    {
+      "pad": 5,
+      "control": 28,
+      "parameter_id": 522,
+      "cc": 115,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A06 (Send 1)"
+    },
+    {
+      "pad": 6,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 15,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A07 (Filter Cutoff)"
+    },
+    {
+      "pad": 3,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 103,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A04 (Filter Cutoff)"
+    },
+    {
+      "pad": 0,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 24,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A01 (Send 2)"
+    },
+    {
+      "pad": 7,
+      "control": 0,
+      "parameter_id": 514,
+      "cc": 81,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A08 (Filter Cutoff)"
+    },
+    {
+      "pad": 7,
+      "control": 3,
+      "parameter_id": 513,
+      "cc": 80,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A08 (Tuning)"
+    },
+    {
+      "pad": 2,
+      "control": 1,
+      "parameter_id": 515,
+      "cc": 87,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A03 (Filter Resonance)"
+    },
+    {
+      "pad": 0,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 30,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A01 (Pan)"
+    },
+    {
+      "pad": 6,
+      "control": 6,
+      "parameter_id": 517,
+      "cc": 3,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A07 (Pan)"
+    },
+    {
+      "pad": 6,
+      "control": 29,
+      "parameter_id": 523,
+      "cc": 18,
+      "midi_channel": 1,
+      "alsa_channel": 0,
+      "name": "A07 (Send 2)"
+    }
+  ],
+  "scope": "Only this reference project; no inferred mappings beyond A08",
+  "channel_evidence": {
+    "url": "https://github.com/djokenzi/steprunner-8/blob/be8c32428a101ce226e0685cf8aa090844b15077/steprunner8.cpp",
+    "writer_lines": "786-800",
+    "convention": "MIDI Learn channel = zero-based sequencer channel + 1",
+    "hardware_verified": false
+  },
+  "cc_output_default": false,
+  "base_values_policy": "Do not infer sound values from cached controlValue; retain user base values"
 }

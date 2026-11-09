@@ -1,6 +1,6 @@
-# πClideaN16 MPC — User Manual
+# πClideaN — User Manual
 
-Version 1.3.2
+Version 1.3.4
 
 ## 1. Overview
 
@@ -44,7 +44,7 @@ Use distinct notes for independent sounds, and avoid receiving the same output t
 
 ## 3. PATTERN — LINE
 
-![PATTERN LINE — A03 selected](images/pattern-line-force-1.2.5.png)
+![PATTERN LINE — RAND selection](images/pattern-commander-1.3.4.png)
 
 Choose a pattern from **A01 to A16**, then **LINE**. 
 
@@ -94,7 +94,7 @@ Both move through the available rhythmic divisions.
 
 ### Selective RANDOM
 
-![RAND — HUMANIZE, STEPS and HITS selected on A03](images/rand-selection-force-1.2.5.png)
+![PATTERN LINE — RAND selection](images/pattern-commander-1.3.4.png)
 
 Keep what you like. Let chance explore the rest.
 
@@ -114,17 +114,31 @@ A new Steps value respects unselected Hits and Rotate. If RAND changes Steps, Hi
 
 A random result can equal the previous value.
 
-RAND and Rd ALL limit generated active steps to **75% of each lane length**, rounded down (12/16, 24/32). Manual editing remains unrestricted. In selective RAND, unselected parameters are preserved; if the density constraint is impossible, the lane stays unchanged and selection closes. A one-step generated lane is silent. This limit does not reduce ratchet repeats or independent LFO triggers.
+RAND, ALTER and Rdm 8 limit generated active steps to **75% of each lane length**, rounded down (12/16, 24/32). Manual editing remains unrestricted. In selective RAND, unselected parameters are preserved; if the density constraint is impossible, the lane stays unchanged and selection closes. A one-step generated lane is silent. This limit does not reduce ratchet repeats or independent LFO triggers.
 
-### Rd ALL — sixteen fresh patterns
+### ALTER and A/B — develop a lane
 
-Tap **Rd ALL**, then **APPLY** in the confirmation panel. **CANCEL** keeps everything unchanged.
+Tap **VAR** to open VARIATIONS. **RAND** keeps the normal two-stage parameter-selection workflow; no long press is needed.
 
-Steps, Hits, Rotate and Division are randomized on all sixteen lanes. Step customizations are cleared.
+Select **STEPS, HITS, ROTATE and/or DIVISION**, then choose **LIGHT, MEDIUM or FREE**. **ALTER** compares bounded candidates for resemblance, cyclic anchors, density and spacing.
 
-Velocity and Probability return to 100, Humanize to 0 and Gate to 50. Lanes return to GATE; Solo, auto-rotation and MOD reset.
+Starting from A, ALTER prepares B and preserves A. Switch **A / B** to compare. **COPY A → B** replaces B with A; **CLOSE** retains the selected variant.
 
-**MUTE states**, **MIDI pitches** and the **applied scale** are preserved.
+A/B stores rhythm and step customizations. Notes, LINE settings, MUTE/SOLO, HOLD, traversal and MOD stay shared. Locks remain at their original step indices, even if shortening hides them. Incompatible protections or density constraints leave the lane unchanged.
+
+### Rdm 8 — generate eight patterns together
+
+Tap **Rdm 8**, then **APPLY**. **CANCEL** changes nothing.
+
+Lanes **01–08** are generated together using shared timing occupancy to favour anchors, responses and space. **09–16 remain untouched.**
+
+On 01–08, step edits and A/B reset; Velocity/Probability return to 100, Humanize to 0 and Gate to 50. HOLD, Solo, traversal and autorotation reset; MOD slots assigned to those lanes return to NONE/OFF.
+
+A preserved SOLO on 09–16 can keep the new 01–08 lanes inaudible.
+
+**MUTE**, **MIDI pitches** and the **applied scale** are preserved. Search runs in the background; changing context during calculation may discard its result.
+
+These features belong to the local 1.3.4 candidate. Native gestures and musical results still require Force validation.
 
 ## 4. PATTERN — EDIT
 
@@ -169,7 +183,7 @@ In EDIT, the dimmed VELOCITY, PROBABILITY and HUMANIZE controls remain lane refe
 
 ## 5. MOD — dual LFO modulation
 
-![MOD 1 assigned to A16 — Random Smooth, Bounce and LFO chaining](images/mod-force-1.3.0.png)
+![MOD — dual LFO controls](images/mod-commander-1.3.4.png)
 
 Add movement to a lane, or let a waveform create its own triggers.
 
@@ -281,7 +295,7 @@ Tap **MODE** to open the playback-direction panel. Select a mode to apply it and
 
 ## 7. 01 - 08 / 09 - 16 — playback and rotation
 
-![Lanes 01–08 — A07 selected, Auto Rotate enabled](images/tracks-force-1.2.5.png)
+![Lanes 01–08](images/01-08-commander-1.3.4.png)
 
 Step back and watch eight lanes play together.
 
@@ -315,7 +329,7 @@ A cycle follows the playback mode, not necessarily a host bar. Step expression m
 
 ## 8. CONFIG — MIDI notes and GATE / HOLD
 
-![CONFIG — Dorian mode selected, awaiting APPLY](images/config-force-1.2.5.png)
+![CONFIG — MIDI notes and scale assignment](images/config-commander-1.3.4.png)
 
 Give each lane its sound and choose how it holds a note.
 
@@ -403,3 +417,7 @@ Probability follows the lane seed and musical position, so a repeating host loop
 ## COUNT-IN — match the host
 
 Set COUNT-IN in CONFIG to match MPC: **OFF** (default), **RECORD**, or **RECORD + PLAY**. Notes from the pattern and LFOs wait during the selected count-in. An eight-beat timeout prevents indefinite waiting when host and plugin settings differ. This correction passed offline tests; count-in playback on a device remains to be confirmed.
+
+### Rhythmic preferences
+
+ALTER and Rdm 8 use compact preferences extracted offline from Groove MIDI Dataset: cyclic spacing, compatible metric positions, densities and overlaps. Operation is entirely local to the instrument. This does not add swing, timing humanization or harmonic generation. [Details and credits](GROOVE-STATISTICS.md).
