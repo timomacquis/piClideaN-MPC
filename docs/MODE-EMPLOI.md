@@ -179,7 +179,7 @@ En EDIT, VELOCITY, PROBABILITY et HUMANIZE restent des références de ligne gri
 
 ## 5. MOD — deux LFO par emplacement
 
-![MOD — dual LFO controls](images/mod-commander-1.3.4.png)
+![MOD — BOUNCE vers NOTE ON ; LFO 2 module la profondeur du LFO 1](images/mod-commander-1.3.4.png)
 
 Ajoute du mouvement à une ligne, ou laisse une forme d’onde créer ses propres déclenchements.
 

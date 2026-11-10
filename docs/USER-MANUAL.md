@@ -183,7 +183,7 @@ In EDIT, the dimmed VELOCITY, PROBABILITY and HUMANIZE controls remain lane refe
 
 ## 5. MOD — dual LFO modulation
 
-![MOD — dual LFO controls](images/mod-commander-1.3.4.png)
+![MOD — BOUNCE to NOTE ON; LFO 2 modulates LFO 1 depth](images/mod-commander-1.3.4.png)
 
 Add movement to a lane, or let a waveform create its own triggers.
 
