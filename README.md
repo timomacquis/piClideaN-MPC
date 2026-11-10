@@ -63,8 +63,8 @@ Choose the package for your device. Both builds use πClideaN **1.3.5**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.5/ClideaN-MPC-1.3.5-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
-| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.5/ClideaN-MPC-1.3.5-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.5/ClideaN-MPC-1.3.5-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
+| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.5/ClideaN-MPC-1.3.5-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
 The 1.3.2 loop-continuity fix was validated on Force as candidate.1. Gen2 packages are built from the same sources with the Live III skin workaround and await device validation. Thanks to Thomas Phillips for the original Gen2 port. See [Gen2 validation](docs/GEN2-VALIDATION.md).
 

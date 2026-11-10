@@ -1,4 +1,10 @@
-"""One official packaging path for both device generations; never accesses a device."""
+"""One official packaging path for both device generations; never accesses a device.
+
+The public repository is timomacquis/piClideaN-MPC. Keep piClideaN16-MPC as
+source_repo while the catalog registry uses that historical alias: the checker
+requires exact equality, and GitHub redirects the alias to the renamed repository.
+Migrate registry and package metadata together in a later coordinated change.
+"""
 from pathlib import Path
 import json,hashlib,subprocess,sys,re,xml.etree.ElementTree as ET
 from project_config import VERSION,DISPLAY_NAME,FOLDER
