@@ -42,7 +42,7 @@ def attach_docs(z,origin):
  for name in ['README.md','LICENSE','THIRD_PARTY.md','Cover.png','Cover.JPG']:additions[name]=((B/'docs/PACKAGE-README.md') if name=='README.md' and (B/'docs/PACKAGE-README.md').exists() else (B/name)).read_bytes()
  for directory in ['docs','licenses']:
   for p in (B/directory).rglob('*'):
-   if p.is_file() and p.name!='TOOLCHAIN.json' and not (directory=='docs' and p.relative_to(B/directory).parts[0] not in ('images','USER-MANUAL.md','MODE-EMPLOI.md','INSTALLATION.md','CANDIDATE-1.3.4.md','NATIVE-PRESETS.md','SKIN-PITONIC.md','RELEASE-NOTES.md','PACKAGE-README.md','GROOVE-STATISTICS.md')):additions[p.relative_to(B).as_posix()]=p.read_bytes()
+   if p.is_file() and p.name!='TOOLCHAIN.json' and not (directory=='docs' and p.relative_to(B/directory).parts[0] not in ('images','USER-MANUAL.md','MODE-EMPLOI.md','INSTALLATION.md','CANDIDATE-1.3.4.md','NATIVE-PRESETS.md','SKIN-PITONIC.md','RELEASE-NOTES.md','RELEASE-NOTES-1.3.5.md','PACKAGE-README.md','GROOVE-STATISTICS.md')):additions[p.relative_to(B).as_posix()]=p.read_bytes()
  additions['PROVENANCE.json']=(json.dumps(origin,ensure_ascii=False,indent=2)+'\n').encode()
  for name,data in additions.items():
   info=zipfile.ZipInfo(top+'/'+name,(2026,11,5,0,0,0));info.create_system=3;info.external_attr=0o100644<<16;info.compress_type=zipfile.ZIP_DEFLATED;rows[name]=(info,data)

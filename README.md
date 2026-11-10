@@ -1,6 +1,6 @@
 # πClideaN
 
-**Version 1.3.4 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
+**Version 1.3.5 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
 
 ![πClideaN — PATTERN LINE, selective RAND](Cover.png)
 
@@ -59,12 +59,12 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ## Download and setup
 
-Choose the package for your device. Both builds use πClideaN **1.3.2**.
+Choose the package for your device. Both builds use πClideaN **1.3.5**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.4/ClideaN-MPC-1.3.4-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
-| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.4/ClideaN-MPC-1.3.4-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.5/ClideaN-MPC-1.3.5-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
+| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN16-MPC/releases/download/v1.3.5/ClideaN-MPC-1.3.5-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
 The 1.3.2 loop-continuity fix was validated on Force as candidate.1. Gen2 packages are built from the same sources with the Live III skin workaround and await device validation. Thanks to Thomas Phillips for the original Gen2 port. See [Gen2 validation](docs/GEN2-VALIDATION.md).
 

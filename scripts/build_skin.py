@@ -16,7 +16,7 @@ z=zipfile.ZipFile(B/'reference/skin-base.zip');assert hashlib.sha256((B/'referen
 J=json.loads(z.read('Plugin Skins/TUI.json'));D=J['pageData'];D['componentDefinitions']['localComponentDefinitions']=[];defs=D['componentDefinitions']['localComponentDefinitions']
 C={'bg':'#171c1f','panel':'#242c31','oled':'#141d24','text':'#f1f2ed','muted':'#b4bcba','red':'#ee4b5d','amber_bg':'#383122','amber_text':'#c7aa6d','amber_edge':'#897447','edge':'#42515c'}
 VALUE_FONT=16  # Same native font height as the four-bar MOD tempo caption.
-PATTERN_VALUE_FONT=21  # LINE/EDIT: centred values, approved 9 November 2026.
+PATTERN_VALUE_FONT=30  # Match πToniC rotary values; labels remain Titillium Web Regular 18.
 PICKER_FONT=22
 CAPTION_FONT=18
 BUTTON_FONT=23
