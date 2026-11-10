@@ -2,6 +2,8 @@
 
 Version 1.3.4
 
+Illustrations capturées avec Commander, à partir du skin actuel et des réglages de l’instrument.
+
 ## 1. Principe
 
 πClideaN est un instrument MIDI : il ne produit aucun son. Il pilote un synthétiseur, un instrument de batterie ou une piste de samples via sa sortie MIDI dédiée.
@@ -14,9 +16,9 @@ Elles peuvent ainsi boucler sur des durées différentes tout en restant synchro
 
 Cinq onglets : PATTERN, MOD, 01 - 08, 09 - 16 et CONFIG. 
 
-A01–A16 permettent la selection d'un pattern / ou ligne.
+**A01–A16** sélectionnent un pattern, autrement dit une ligne.
 
-Le contour blanc indique le pattern séléctionné.
+Le contour blanc indique le pattern sélectionné.
 
 ## 2. Connecter une cible
 
@@ -42,7 +44,7 @@ Utilise des notes distinctes pour les sons indépendants et évite de recevoir d
 
 ## 3. PATTERN — LINE
 
-![PATTERN LINE — RAND selection](images/pattern-commander-1.3.4.png)
+![PATTERN LINE — A03, 18 pas, 7 frappes, rotation 1](images/pattern-commander-1.3.4.png)
 
 Choisis **A01–A16**, puis **LINE**. Construis un motif et donne son caractère à toute la ligne.
 
@@ -90,7 +92,7 @@ Ces deux commandes parcourent les divisions rythmiques disponibles.
 
 ### RAND sélectif
 
-![PATTERN LINE — RAND selection](images/pattern-commander-1.3.4.png)
+![RAND — HITS / ROTATE](images/rand-selection-commander-1.3.4.png)
 
 Garde ce qui te plaît. Laisse le hasard explorer le reste.
 
@@ -100,7 +102,7 @@ Touche les paramètres à faire varier. Ils passent au **vert** ; leurs valeurs 
 
 Un second appui sur **RAND** applique le tirage. Seuls les paramètres sélectionnés changent, puis la sélection se ferme.
 
-Les huit paramètres LINE sont disponibles. Ici, HUMANIZE, STEPS et HITS sont sélectionnés.
+Les huit contrôles sont disponibles, dans les rangées LINE et STEPS. L’illustration sélectionne **HITS et ROTATE**.
 
 Sans sélection, rien ne change. Changer de ligne ou de mode LINE/EDIT annule la sélection.
 
@@ -114,11 +116,23 @@ RAND, ALTER et Rdm 8 limitent les pas actifs générés à **75 % de la longueur
 
 ### ALTER et A/B — faire évoluer une ligne
 
+![VARIATIONS — A, FREE, HITS sélectionné](images/variations-commander-1.3.4.png)
+
 Touche **VAR** pour ouvrir VARIATIONS. **RAND** conserve la sélection des paramètres puis l’application au deuxième appui ; aucun appui long n’est nécessaire.
 
 Choisis **STEPS, HITS, ROTATE et/ou DIVISION**, puis **LIGHT, MEDIUM ou FREE** pour doser les changements. Touche **ALTER** : une recherche guidée compare la proximité du motif, ses appuis, sa densité et ses respirations.
 
-Depuis A, ALTER prépare B en gardant A. **A / B** permet de comparer ; **COPY A → B** remplace B par A. **CLOSE** conserve la variante sélectionnée.
+**A / B** choisit l’une des deux versions rythmiques de la ligne sélectionnée. Au premier usage, elles sont identiques. Tes modifications appartiennent à la version choisie.
+
+**COPY A → B** remplace B par A et sélectionne B. Une façon simple de préparer une copie de départ.
+
+Depuis **A**, **ALTER** garde A et prépare son résultat dans B. Depuis **B**, un nouvel ALTER développe B en conservant A. **CLOSE** revient à PATTERN en gardant la version sélectionnée active.
+
+**LIGHT** reste proche du motif de départ. **MEDIUM** autorise davantage de changement. **FREE** explore plus largement, en respectant les paramètres protégés et la densité maximale. Ce n’est pas une remise à zéro sans contraintes.
+
+La capture prépare une variation de **HITS seulement**, en FREE. L’aperçu de 32 pas conserve les couleurs des frappes, des locks et des pas inutilisés.
+
+Le passage A/B est immédiat : il n’attend pas la mesure suivante. Les notes tenues par cette ligne sont relâchées.
 
 A/B conserve rythme et personnalisations par pas. Notes, paramètres LINE, MUTE/SOLO, HOLD, parcours et MOD restent communs. Les personnalisations restent à leur numéro de pas, même lorsqu’un raccourcissement les masque. Une variation incompatible avec les protections ou la densité laisse la ligne intacte.
 
@@ -134,13 +148,15 @@ Un SOLO conservé sur 09–16 peut rendre les nouvelles lignes 01–08 inaudible
 
 Les **MUTE**, les **hauteurs MIDI** et la **gamme appliquée** restent conservés. Le calcul se fait en arrière-plan ; un changement de contexte pendant la recherche peut annuler sa proposition.
 
-Ces fonctions sont proposées dans le candidat 1.3.4 ; gestes natifs et résultat musical restent à valider sur Force.
+Pour démarrer : génère huit lignes avec Rdm 8, garde les lignes indésirables mutées, puis développe une ligne à la fois avec VAR.
 
 ## 4. PATTERN — EDIT
 
-![EDIT SELECT — A03, pas 04, vélocité personnalisée à 49](images/pattern-edit-force-1.2.4.png)
+![EDIT — A03, pas 10, RATCHET 5](images/edit-commander-1.3.4.png)
 
 Donne son propre caractère à une frappe.
+
+Sur la capture, **A03 / pas 10** possède **RATCHET 5**. L’encart entier et le pas violets signalent ce réglage personnalisé.
 
 Choisis **EDIT**, puis un pas. La rangée **STEP** lui appartient maintenant.
 
@@ -156,7 +172,7 @@ Choisis **EDIT**, puis un pas. La rangée **STEP** lui appartient maintenant.
 
 Sans personnalisation, vélocité et probabilité suivent la ligne ; ratchet vaut 1 et decay 100.
 
-**GATE · STEP**, dans la rangée supérieure, verrouille la durée du pas sélectionné : 10–95 % du pas ou de chaque subdivision ratchet. Sans lock, il hérite du GATE de LINE. HOLD garde la priorité ; revenir en GATE retrouve les durées enregistrées.
+**GATE**, en haut à droite dans EDIT, verrouille la durée du pas sélectionné : 10–95 % du pas ou de chaque subdivision ratchet. Sans lock, il hérite du GATE de LINE. HOLD garde la priorité ; revenir en GATE retrouve les durées enregistrées.
 
 Tout l’encart du contrôle devient **violet** lorsqu’un lock est enregistré sur le pas. Les autres références LINE de la rangée supérieure restent en lecture seule. ERASE en SELECT efface les locks d’expression du pas, GATE compris ; en DRAW, il retire le déclenchement.
 
@@ -175,7 +191,7 @@ Modifier l’expression seule ne crée pas de note.
 
 Les modifications sont immédiates, sans annulation.
 
-En EDIT, VELOCITY, PROBABILITY et HUMANIZE restent des références de ligne grisées. GATE · STEP agit sur le pas sélectionné. Reviens en LINE pour modifier les valeurs générales.
+En EDIT, VELOCITY, PROBABILITY et HUMANIZE restent des références de ligne grisées. Le GATE supérieur agit sur le pas sélectionné. Reviens en LINE pour modifier les valeurs générales.
 
 ## 5. MOD — deux LFO par emplacement
 
@@ -188,6 +204,8 @@ Choisis **MOD 1–MOD 4**, puis affecte un **PAD** dans le panneau de sélection
 Chaque ligne peut utiliser un emplacement. Par défaut, tous les emplacements sont sur **NONE** et les LFO sur **OFF**.
 
 La sélection MOD ne change pas la ligne choisie dans PATTERN.
+
+Pour entendre le routage illustré, affecte une ligne et active les LFO concernés. La capture prépare BOUNCE → NOTE ON et LFO 2 → LFO 1 DEPTH, avec les LFO encore sur OFF.
 
 ### Construire le mouvement
 
@@ -259,9 +277,11 @@ Réaffecter un PAD libère sa précédente note LFO.
 
 ## 6. État Mute et activité des lignes
 
-![A03 sélectionnée, lignes mutées atténuées et activité azur sur A05](images/lane-activity-force-1.3.0.png)
+![A04 sélectionnée ; activité azur sur A01/A03 et lignes mutées atténuées](images/activity-commander-1.3.4.png)
 
 Suis le rythme en regardant **A01–A16**.
+
+Sur la capture, **A04** reste sélectionnée pendant que **A01 et A03** pulsent en azur. Les boutons atténués repèrent les lignes mutées ; le contour rouge interne du pas 03 marque la tête de lecture.
 
 Une **impulsion azur** indique qu’une note émise arrive à son heure de lecture. Ta ligne sélectionnée garde son contour blanc.
 
@@ -299,6 +319,8 @@ Chaque aperçu montre 32 pas. Les motifs mutés restent visibles ; un contour cl
 
 ### Changer de direction
 
+Touche **MODE** pour ouvrir le panneau des parcours. Choisis un mode : il s’applique et le panneau se ferme. **CANCEL** conserve le mode courant.
+
 **FWD / REV :** avance ou recule.
 
 **PEND1 :** fait l’aller-retour en répétant les extrémités : 1–2–3–4–4–3–2–1.
@@ -311,15 +333,17 @@ Chaque aperçu montre 32 pas. Les motifs mutés restent visibles ; un contour cl
 
 Passe **AUTO ROTATE sur ON**.
 
-**SHIFT** choisit le déplacement : −8 à +8 pas.
+**SHIFT / STEPS** choisit le déplacement : −8 à +8 pas. Une valeur négative tourne dans l’autre sens.
 
-**EVERY** choisit l’intervalle : 1–16 cycles de ligne.
+**EVERY / CYCLES** choisit l’intervalle : 1–16 cycles de ligne. Par exemple, SHIFT / STEPS 1 et EVERY / CYCLES 2 déplacent le motif d’un pas tous les deux cycles complets de la ligne.
 
 Le cycle dépend du parcours, pas nécessairement d’une mesure hôte. Les expressions suivent leur déclenchement ; la sélection suit ses données.
 
 **RESET PHASE** demande une remise en phase à la prochaine frontière de pas en lecture.
 
-**CYCLE** et **SHIFT** affichent le cycle et la rotation courants.
+Les petits compteurs **SHIFT** et **CYCLE** affichent la rotation cumulée et le cycle courant.
+
+Sur la capture, **A04** est sélectionnée et AUTO ROTATE est actif. Les boutons M ambrés coupent A03, A05 et A06 ; ils agissent sur leur rangée, indépendamment de la ligne sélectionnée.
 
 ## 8. CONFIG — notes MIDI et GATE / HOLD
 
@@ -329,21 +353,25 @@ Associe un son à chaque ligne, puis choisis la tenue de ses notes.
 
 **MIDI NOTE** règle la note émise : 0–127, avec son nom selon la convention Force, par exemple **36 · C1**.
 
-Sur cette capture, **Dorian mode** est préparé mais pas encore appliqué : SCALES et APPLY sont verts, les notes restent 36–51.
+La vue générale utilise **DRUM**, avec les notes 36–51. La seconde capture montre un changement de gamme préparé, encore en attente de validation.
 
 ### Jouer une gamme
+
+![CONFIG — Locrian mode en attente d’APPLY ; COUNT-IN RECORD + PLAY](images/config-scale-commander-1.3.4.png)
 
 **SCALES** ouvre le panneau des gammes. Choisis **DRUM**, une gamme ou un mode.
 
 **START** choisit la note de départ complète : tonique et octave.
 
-Les choix modifiés passent au vert. **APPLY** répartit les seize notes dans l’ordre ascendant ; rien ne change avant cet appui.
+Le champ **SCALES** ou **START** modifié devient vert, ainsi que **APPLY**. Seul le champ changé est surligné. Les hauteurs ne changent pas avant APPLY.
+
+Ici, **Locrian mode** est préparé à partir de **36 · C1**, mais les seize notes affichent encore l’affectation DRUM. APPLY répartirait les notes de la gamme dans l’ordre ascendant ; choisir une gamme seul ne modifie pas le jeu.
 
 **RESET** rétablit DRUM, notes 36–51, sans modifier les rythmes, les personnalisations de pas ni GATE/HOLD.
 
 Si les seize notes dépassent la plage MIDI, baisse START avant d’appliquer.
 
-Touche le bouton sous **MODE** pour passer de GATE à HOLD, ou inversement.
+Touche **GATE / HOLD** à côté d’une ligne pour changer sa tenue. La vue générale montre HOLD sur A02 et A06 ; les autres lignes utilisent GATE.
 
 ### Des frappes courtes : GATE
 
@@ -351,7 +379,7 @@ Le bouton **GATE** sombre utilise la durée de note réglée dans PATTERN.
 
 À 120 BPM et en 1/16, un pas dure 125 ms. GATE 50 tient 62,5 ms ; avec ratchet 4, chaque répétition tient environ 15,6 ms.
 
-Les limites de boucle hôte peuvent raccourcir les notes.
+Les retours normaux de boucle hôte préservent les cycles indépendants et les tenues. Stop ou un déplacement volontaire du transport sont des actions distinctes.
 
 ### Laisser continuer : HOLD
 
@@ -367,6 +395,16 @@ HOLD convient aux samples longs et instruments tenus. Il ne prolonge pas un samp
 
 Utilise des notes distinctes pour des lignes indépendantes. Une même note/canal fait intervenir la protection contre les chevauchements.
 
+### COUNT-IN — suivre le décompte de l’hôte
+
+Règle **COUNT-IN** comme le décompte de MPC :
+
+- **OFF** : aucune attente ajoutée.
+- **RECORD** : attendre au départ de l’enregistrement.
+- **RECORD + PLAY** : attendre au départ de la lecture ou de l’enregistrement.
+
+Ce réglage n’active ni le métronome ni le décompte de MPC. Il indique à πClideaN quand retenir les notes des motifs et des LFO. Une limite de sécurité de huit temps évite une attente indéfinie si les réglages diffèrent. L’exemple affiche RECORD + PLAY.
+
 ## 9. Q-Links et automatisation
 
 Prends les Q-Links pour jouer directement avec les réglages.
@@ -378,7 +416,8 @@ Dans PATTERN en **LINE** :
 
 En **EDIT** :
 
-- Q1–Q4 : inactifs.
+- Q1–Q3 : références LINE en lecture seule.
+- **Q4 : GATE du pas sélectionné.**
 - Q5–Q8 : Velocity, Probability, Ratchet, Decay du pas.
 
 Dans **MOD** :
@@ -396,15 +435,19 @@ L’automatisation de ligne continue en EDIT. Celle des pas vise leurs données 
 
 L’automatisation hôte est distincte de l’entrée CC MIDI : le plugin n’enregistre ni ne rejoue les CC.
 
-## 10. Sauvegarde et lecture
+## 10. Presets, projets et lecture
 
-Tu tiens un rythme qui te plaît ? **Sauvegarde le projet.**
+Pars de **INIT** pour obtenir seize lignes silencieuses et les notes par défaut, puis ajoute des frappes ou utilise Rdm 8.
 
-Il conserve motifs, expressions par pas, notes MIDI, GATE/HOLD, parcours et les quatre emplacements MOD.
+Le menu natif **PRESET** propose aussi Straight Four, Broken Grid, Polymeter, Dorian Flow, Slow Orbit et Step Expression. Charger un preset remplace les réglages courants de l’instrument.
+
+Tu tiens un rythme qui te plaît ? Sauve ton propre preset depuis le menu natif de l’hôte, ou **sauvegarde le projet**.
+
+L’état sauvegardé conserve les deux variantes A/B, motifs, expressions par pas, notes MIDI, gamme appliquée, GATE/HOLD, COUNT-IN, parcours et les quatre emplacements MOD.
+
+La 1.3.4 lit les anciens états. Son extension A/B ne peut pas être lue par les anciens moteurs : conserve les projets originaux pour pouvoir y revenir.
 
 Les notes tenues et les phases LFO de lecture ne sont pas sauvegardées. Stop relâche les notes détenues.
-
-La probabilité dépend de la graine de ligne et de la position musicale : une boucle hôte peut reproduire les mêmes décisions.
 
 πClideaN ne crée pas de clips natifs, ne pilote pas les LED des pads physiques et ne produit aucun audio. Les limites d’ordonnancement sont décrites dans la documentation moteur.
 
