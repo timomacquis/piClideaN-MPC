@@ -332,9 +332,44 @@ config.append(button('open_mapping','RESET',875,302,360,46,native_touch=True))
 # COUNT-IN is an explicit match to MPC; never guessed from stopped PPQ.
 im,d=image(360,28);text(d,(0,0),'COUNT-IN',CAPTION_FONT,C['muted']);save('config_countin.png',im);config.append(art('config_countin.png',875,382,360,28))
 config.append(field('can_redo',875,412,360,46,PICKER_FONT))
-# Only MOD still owns a selection layer.
-def overlay(dialog,title):
- im,d=image(1280,628);text(d,(40,25),title,32);filename=f'dialog{dialog}.png';save(filename,im);return [art(filename,0,0,1280,628)]
+# Compact panel contract: only controls INSIDE these panels are 36px high.
+PANEL_H=36;panel_layouts=[]
+def anchor_control(page,key):
+ return next(c for c in page if any(m['key']=='Data' and m['value']==f'Parameter {I[key]}' for m in c['handle remapping']['map']))
+def compact_base(page,dialog,title,w,h,opener,caption=None,static=None,context=None,center_title=False):
+ x=(1280-w)//2;y=(628-h)//2;cond=[gate('dialog',dialog,8)]+(context or [])
+ fn='compact_scrim.png'
+ if not (A/fn).exists():save(fn,Image.new('RGBA',(1280,628),(4,7,13,155)))
+ blocker=local(f'compact_blocker_{dialog}_{len(defs)}',[art(fn,0,0,1280,628)],[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')])
+ cs=[placed(blocker,'close',0,0,1280,628)]
+ source=anchor_control(page,opener);xx,yy,ww,hh=map(int,source['bounds']['bounds'].split())
+ # Keep the yellow opener visible when a compact placement allows it.
+ if x<xx+ww and x+w>xx and y<yy+hh and y+h>yy:
+  if yy-h-12>=0:y=yy-h-12
+  elif yy+hh+12+h<=628:y=yy+hh+12
+  elif xx-w-12>=0:x=xx-w-12
+  elif xx+ww+12+w<=1280:x=xx+ww+12
+ im,d=image(ww,hh);rounded(d,(1,1,ww-2,hh-2),fill=C['amber_bg'],outline=C['amber_edge'])
+ if static:text(d,(ww/2,hh/2),static,BUTTON_FONT,C['amber_text'],'mm')
+ fn=f'compact_opener_{dialog}_{len(defs)}.png';save(fn,im);children=[art(fn,0,0,ww,hh)]
+ if caption:
+  v=label(12,0,ww-24,hh,PICKER_FONT,colour='ff'+C['amber_text'][1:],justification='horizontallyCentred verticallyCentred');children.append(v)
+ kind=local(f'compact_raised_{dialog}_{len(defs)}',children);c=placed(kind,caption or 'dialog',xx,yy,ww,hh);c['bounds']['acceptsHWFocus']='No';cs.append(c)
+ im,d=image(w,h,C['oled']);rounded(d,(1,1,w-2,h-2),fill=C['oled'],outline=C['edge']);text(d,(w/2,32 if title=='VARIATIONS' else 42) if center_title else (24,16),title,24 if center_title else 22,anchor='mm' if center_title else None);fn=f'compact_panel_{dialog}_{len(defs)}.png';save(fn,im)
+ surface=local(f'compact_surface_{dialog}_{len(defs)}',[art(fn,0,0,w,h)],[action('Q-Link')]);cs.append(placed(surface,'close',x,y,w,h))
+ panel_layouts.append(dict(dialog=dialog,title=title,panel=[x,y,w,h],opener_key=opener,opener_bounds=[xx,yy,ww,hh],conditions=cond))
+ return cs,x,y,cond
+def finish_panel(page,cs,cond):
+ for c in cs:c['bounds']['additionalInvalidatingHandles'].extend(cond);page.append(c)
+def selection_panel(page,dialog,title,options,key,count,opener,caption=None,context=None,start_id=0,none=False,tag='choice'):
+ cols=4 if len(options)>=10 else 3 if len(options)>=5 else min(2,len(options));rows=math.ceil(len(options)/cols)
+ bw=max(110,math.ceil(max(font(21).getlength(t) for t in options))+32);w=max(420,48+cols*bw+(cols-1)*12);bw=(w-48-(cols-1)*12)//cols
+ footer=70+rows*36+(rows-1)*12+22;h=footer+60
+ cs,x,y,cond=compact_base(page,dialog,title,w,h,opener,caption,context=context)
+ for i,title in enumerate(options):cs.append(button(key,title,x+24+(i%cols)*(bw+12),y+70+(i//cols)*48,bw,36,False,i+start_id,count,tag=f'compact_{tag}_{i}'))
+ if none:cs.append(button('apply_rhythm','NONE',x+24,y+footer,160,36,native_touch=True));cx=x+w-184
+ else:cx=x+(w-160)//2
+ cs.append(button('close','CLOSE',cx,y+footer,160,36,native_touch=True));finish_panel(page,cs,cond)
 # E01 MOD panel. All fields retain one native touch/focus owner.
 # Activity indicators are passive and cannot intercept a lane press.
 mod_parts=[art('pattern.png',0,0,1280,628)]
@@ -470,72 +505,42 @@ defs[-1]['value']['componentsData'][0]['componentData']['data']['textStyle']['ju
 for c in mod_parts:
  rect=list(map(int,c['bounds']['bounds'].split()))
  if rect[1]>=130:rect[1]-=50;c['bounds']['bounds']=' '.join(map(str,rect))
-for c in mod_parts:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',0,7))
-cs=overlay(6,'SELECT PAD')
-for i in range(16):
- cs.append(button('mod_pad',f'A{i+1:02}',280+(i%8)*90,220+(i//8)*75,78,56,False,i+1,17,tag=f'mod_target_pad{i}'))
-cs += [button('apply_rhythm','NONE',380,420,220,52,native_touch=True),button('close','CANCEL',680,420,220,52,native_touch=True)]
-for c in cs:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',6,7));mod_parts.append(c)
-# Same opaque selection-layer mechanism as MOD pad assignment.
-for c in config:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',0,7))
-scale_layer=overlay(5,'SELECT SCALE')
+# Native dialog and selection action indices are preserved exactly.
+selection_panel(mod_parts,6,'SELECT PAD',[f'A{i+1:02}' for i in range(16)],'mod_pad',17,'open_rhythm','mod_pad',start_id=1,none=True,tag='pad')
 scale_names=next(p['options'] for p in P if p['key']=='choose_sound')
-for i,title in enumerate(scale_names):
- scale_layer.append(button('choose_sound',title,80+(i%4)*282,130+(i//4)*80,268,62,False,i,16,tag=f'scale_choice_{i}'))
-scale_layer.append(button('close','CLOSE',530,500,220,52,native_touch=True))
-for c in scale_layer:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',5,7));config.append(c)
-# Explicit confirmation for a bounded global randomization.
-for c in parts:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',0,7))
-confirmation=overlay(4,'Rdm 8 — generate patterns 01–08')
-im,d=image(1080,100);text(d,(0,0),'Notes and MUTE stay. Lanes 09–16 are unchanged.',22);text(d,(0,36),'01–08: LINE, step edits, A/B, HOLD, play modes and assigned MOD reset.',20,C['muted']);save('intelligent8_confirmation.png',im);confirmation.append(art('intelligent8_confirmation.png',100,140,1080,100))
-confirmation += [button('apply_rhythm','APPLY',370,320,240,56,native_touch=True),button('close','CANCEL',670,320,240,56,native_touch=True)]
-for c in confirmation:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',4,7));parts.append(c)
-# VARIATIONS uses existing contextual handles, no additional parameter slot.
+selection_panel(config,5,'SELECT SCALE',scale_names,'choose_sound',16,'choose_bank','choose_sound',tag='scale')
+cs,x,y,cond=compact_base(parts,4,'Rdm 8 — generate patterns 01–08',940,240,'open_target',static='Rdm 8',center_title=True)
+im,d=image(892,90,C['oled']);text(d,(446,0),'Notes and MUTE stay. Lanes 09–16 are unchanged.',22,anchor='mt');text(d,(446,36),'01–08: LINE, step edits, A/B, HOLD, play modes and assigned MOD reset.',20,C['muted'],'mt');save('compact_rdm8_message.png',im);cs.append(art('compact_rdm8_message.png',x+24,y+84,892,80))
+cs += [button('apply_rhythm','APPLY',x+270,y+180,180,36,native_touch=True),button('close','CANCEL',x+490,y+180,180,36,native_touch=True)];finish_panel(parts,cs,cond)
 variation_button_font=BUTTON_FONT;BUTTON_FONT=20
-variation_layer=overlay(7,'VARIATIONS')
-variation_layer += [button('redo','A',220,122,160,44,False,0,2),button('redo','B',392,122,160,44,False,1,2),button('erase_values','COPY A → B',640,122,380,44,native_touch=True)]
-# Use the same native 128-frame count/plateau convention as the corrected
-# track miniatures. A short strip can expose adjacent states on Force, which
-# corrupts both colours and vertical slicing. One passive owner per step.
+variation_layer,x,y,cond=compact_base(parts,7,'VARIATIONS',860,396,'undo',static='VAR',center_title=True)
+variation_layer += [button('redo','A',x+24,y+56,120,36,False,0,2),button('redo','B',x+156,y+56,120,36,False,1,2),button('erase_values','COPY A → B',x+476,y+56,360,36,native_touch=True)]
+variation_step_left=x+(860-(15*48+40))//2
 for i in range(32):
  tiles=[Image.open(A/f'step{i}_state{state}.png').resize((40,32),Image.Resampling.LANCZOS) for state in range(18)]
  atlas=Image.new('RGB',(40,32*128),C['bg'])
  for frame in range(128):atlas.paste(tiles[round(frame*17/127)],(0,frame*32))
  fn=f'variation_step_atlas{i}.png';save(fn,atlas)
  knob=child('Knob',dict(version=5,knobType='FilmStrip',filmStrip=fn,numFrames=128,invert=False,dragOrientation='Vertical',handleName='Data'),0,0,40,32)
- knob['bounds']['acceptsHWFocus']='No';kind=local(f'variation_preview{i}',[knob]);c=placed(kind,f'editcell{i}',220+(i%16)*52,192+(i//16)*44,40,32);c['bounds']['acceptsHWFocus']='No';variation_layer.append(c)
-for strength,title in enumerate(['LIGHT','MEDIUM','FREE']):variation_layer.append(button('rhythm_choice',title,220+strength*272,304,256,44,False,strength,3))
+ knob['bounds']['acceptsHWFocus']='No';kind=local(f'variation_preview{i}',[knob]);c=placed(kind,f'editcell{i}',variation_step_left+(i%16)*48,y+110+(i//16)*44,40,32);c['bounds']['acceptsHWFocus']='No';variation_layer.append(c)
+for strength,title in enumerate(['LIGHT','MEDIUM','FREE']):variation_layer.append(button('rhythm_choice',title,x+24+strength*274,y+200,264,36,False,strength,3))
 for i,title in enumerate(['STEPS','HITS','ROTATE','DIVISION']):
  for selected in [0,1]:
-  c=button(f'rand_toggle{i+4}',title,220+i*204,370,188,44,native_touch=True,tag=f'var_field{i}_{selected}')
-  # Cache both appearances; the read-only selection mirror owns the colour.
+  tag=f'compact_var_field{i}_{selected}';c=button(f'rand_toggle{i+4}',title,x+24+i*206,y+248,194,36,native_touch=True,tag=tag)
   if selected:
    for state in [0,1]:
-    im,d=image(188,44);rounded(d,(1,1,186,42),fill=C['amber_bg'],outline=C['amber_edge']);text(d,(94,22),title,BUTTON_FONT,C['amber_text'],'mm');save(f'var_field{i}_{selected}_{state}.png',im)
+    im,d=image(194,36);rounded(d,(1,1,192,34),fill=C['amber_bg'],outline=C['amber_edge']);text(d,(97,18),title,20,C['amber_text'],'mm');save(tag+f'_{state}.png',im)
   c['bounds']['additionalInvalidatingHandles']=[gate(f'rand_pick{i+4}',selected,2)];variation_layer.append(c)
-variation_layer += [readout('can_undo',220,436,800,30,PICKER_FONT),button('reset_phase','ALTER',800,478,220,48,native_touch=True),button('close','CLOSE',220,478,220,48,native_touch=True)]
-for c in variation_layer:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',7,8));parts.append(c)
-BUTTON_FONT=variation_button_font
-# A/B marker next to the LINE heading; update only on a bank change.
+variation_layer += [readout('can_undo',x+24,y+296,812,28,PICKER_FONT),button('reset_phase','ALTER',x+616,y+336,220,36,native_touch=True),button('close','CLOSE',x+24,y+336,220,36,native_touch=True)]
+finish_panel(parts,variation_layer,cond);BUTTON_FONT=variation_button_font
 for value,title in [(0,'A'),(1,'B')]:
- im,d=image(32,18);text(d,(0,0),title,14,C['amber_text']);fn=f'line_bank{value}.png';save(fn,im);c=art(fn,70,112,32,18);c['bounds']['additionalInvalidatingHandles']=[gate('dialog',0,8),gate('redo',value,2),gate('edit_view',0,2)];parts.append(c)
-
-# Eight contextual panels share one read-only context handle and one selection.
+ im,d=image(32,18);text(d,(0,0),title,14,C['amber_text']);fn=f'line_bank{value}.png';save(fn,im);c=art(fn,70,112,32,18);c['bounds']['additionalInvalidatingHandles']=[gate('redo',value,2),gate('edit_view',0,2)];parts.append(c)
 mod_lists=[[next(p['options'] for p in P if p['key']==f'mod{j}_'+name) for name in ['wave','sync','rate','dest']] for j in range(2)]
 for pick in range(8):
- title=['WAVEFORM','CLOCK MODE','RATE','DESTINATION'][pick%4]
- panel=overlay(20+pick,title)
- options=mod_lists[pick//4][pick%4]
- for option,name in enumerate(options):panel.append(button('map_sound',name,80+(option%4)*282,190+(option//4)*90,268,64,False,option,11,tag=f'mod_choice_{pick}_{option}'))
- panel.append(button('close','CANCEL',530,510,220,52,native_touch=True))
- for c in panel:c['bounds']['additionalInvalidatingHandles'] += [gate('dialog',2,7),gate('can_undo',pick,8)];mod_parts.append(c)
-mode_panel=overlay(3,'PLAYBACK MODE')
-for option,name in enumerate(['FWD','REV','PEND1','PEND2','URN']):mode_panel.append(button('map_sound',name,110+option*214,240,196,64,False,option,11,tag=f'play_mode_choice{option}'))
-mode_panel.append(button('close','CANCEL',530,420,220,52,native_touch=True))
-for page in track_pages:
- for c in page:c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',0,7))
- for original in mode_panel:
-  c=copy.deepcopy(original);c['bounds']['additionalInvalidatingHandles'].append(gate('dialog',3,7));page.append(c)
+ caption=f'mod{pick//4}_'+['wave','sync','rate','dest'][pick%4]
+ selection_panel(mod_parts,2,['WAVEFORM','CLOCK MODE','RATE','DESTINATION'][pick%4],mod_lists[pick//4][pick%4],'map_sound',11,f'open_sound{pick}',caption,context=[gate('can_undo',pick,8)],tag=f'mod_{pick}')
+for i,page in enumerate(track_pages):selection_panel(page,3,'PLAYBACK MODE',['FWD','REV','PEND1','PEND2','URN'],'map_sound',11,'open_bank','play_mode',tag=f'mode_{i}')
+(B/'Validation/UI-Compact-Panels/layout.json').write_text(json.dumps(panel_layouts,ensure_ascii=False,indent=2)+'\n')
 pages=[('PATTERN' ,parts),('MOD',mod_parts),('01 - 08',track_pages[0]),('09 - 16',track_pages[1]),('CONFIG',config)]
 for name,children in pages:
  for control in children:

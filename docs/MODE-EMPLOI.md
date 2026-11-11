@@ -454,3 +454,8 @@ Les notes tenues et les phases LFO de lecture ne sont pas sauvegardées. Stop re
 ### Préférences rythmiques
 
 ALTER et Rdm 8 utilisent des préférences compactes extraites de Groove MIDI Dataset : espacements, appuis métriques compatibles, densités et superpositions. Tout fonctionne localement sur la Force. Cet ajout ne produit pas de swing, de décalage temporel humain ni de génération harmonique. [Méthode et crédits](GROOVE-STATISTICS.md).
+
+
+### Panneaux de sélection
+
+Les sélecteurs ouvrent un panneau compact au-dessus de l’écran assombri. Le bouton d’ouverture devient jaune. Choisis une option, ou ferme le panneau sans modifier le réglage. Les boutons internes font 36 px ; les commandes de la page gardent leur taille.

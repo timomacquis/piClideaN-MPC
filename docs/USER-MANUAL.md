@@ -458,3 +458,8 @@ Held notes and live LFO phases are not saved. Stop releases owned notes.
 ### Rhythmic preferences
 
 ALTER and Rdm 8 use compact preferences extracted offline from Groove MIDI Dataset: cyclic spacing, compatible metric positions, densities and overlaps. Operation is entirely local to the instrument. This does not add swing, timing humanization or harmonic generation. [Details and credits](GROOVE-STATISTICS.md).
+
+
+### Selection panels
+
+Selectors open a compact panel over the dimmed current screen. The opening selector turns yellow. Choose an option, or close the panel without changing the setting. Panel buttons are 36 px high; main-page controls retain their size.
