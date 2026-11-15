@@ -28,7 +28,10 @@ MAX_GLIBC = (2, 36)   # the newest glibc a catalog plugin may need: MPC OS 3.x a
 # Above skin_compat.MAX_GLIBC_2X (2.32, MPC OS 2.x) it is listed as MPC OS 3.x only; it is not rejected.
 SEMVER = re.compile(r"\d+\.\d+\.\d+")
 ID = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
-ADDIN_KEYS = ("ADDIN_ID", "ADDIN_NAME", "ADDIN_SO", "ADDIN_CONF", "ADDIN_FILES", "ADDIN_DONE", "ADDIN_NETWORK", "ADDIN_VERSION")
+ADDIN_KEYS = ("ADDIN_ID", "ADDIN_NAME", "ADDIN_SO", "ADDIN_CONF", "ADDIN_FILES", "ADDIN_DONE", "ADDIN_NETWORK", "ADDIN_VERSION",
+              "ADDIN_LOGIN", "ADDIN_WEB_PORT", "ADDIN_WEB_PORT_SETTING", "ADDIN_WEB_PATH")
+# ADDIN_WEB_PATH: /seg/ or /seg/seg/ (letters, digits . _ ~ -), no empty, . or .. segments (docs/ADDINS.md, "Declaring a web page")
+ADDIN_WEB_PATH = re.compile(r"/(?:(?!\.\.?/)[A-Za-z0-9._~-]+/)+")
 ADDIN_SCRIPTS = ("install.sh", "uninstall.sh", "addin-lib.sh")
 ADDIN_FILE = re.compile(r"[A-Za-z0-9_-][A-Za-z0-9._-]*")
 
@@ -186,6 +189,28 @@ def parse_addin_manifest(text):
     return out
 
 
+def addin_manifest_problems(am):
+    """The values the installer and the gateway read from addin.manifest that parse_addin_manifest doesn't check: a list of
+    problems (empty when fine)."""
+    out = []
+    if am.get("ADDIN_NETWORK", "") not in ("", "0", "1"):
+        out.append("ADDIN_NETWORK must be 1 or empty")
+    if am.get("ADDIN_LOGIN", "") not in ("", "0", "1"):
+        out.append("ADDIN_LOGIN must be 1 or empty")
+    port, setting, path = (am.get(k, "") for k in ("ADDIN_WEB_PORT", "ADDIN_WEB_PORT_SETTING", "ADDIN_WEB_PATH"))
+    if port and not (port.isdigit() and 1 <= int(port) <= 65535):
+        out.append("ADDIN_WEB_PORT must be a port number (1-65535)")
+    if (setting or path) and not port:
+        out.append("ADDIN_WEB_PORT_SETTING and ADDIN_WEB_PATH need ADDIN_WEB_PORT")
+    if setting and not re.fullmatch(r"[A-Za-z0-9_.-]+", setting):
+        out.append("ADDIN_WEB_PORT_SETTING must be a settings key (letters, digits, _ . -)")
+    if setting and not am.get("ADDIN_CONF"):
+        out.append("ADDIN_WEB_PORT_SETTING needs ADDIN_CONF (the settings file it is read from)")
+    if path and not ADDIN_WEB_PATH.fullmatch(path):
+        out.append("ADDIN_WEB_PATH must start and end with / (like /files/), with letters, digits and . _ ~ - between")
+    return out
+
+
 def check(zpath, catalog=False, expect_id=None, expect_repo=None, require_portable=False):
     errors, warnings = [], []
     err, warn = errors.append, warnings.append
@@ -333,6 +358,8 @@ def check(zpath, catalog=False, expect_id=None, expect_repo=None, require_portab
         except ValueError as e:
             err(str(e))
             am = None
+        for problem in addin_manifest_problems(am or {}):
+            err("addin.manifest: " + problem)
         conf, extra = m.get("conf") or "", m.get("files") or []
         own = [m["so"]] + ([conf] if conf else []) + list(extra)
         for f in own:
@@ -386,6 +413,35 @@ def check(zpath, catalog=False, expect_id=None, expect_repo=None, require_portab
                 err("plugin-meta.xml uid %r != manifest uid %r" % (attr.get("uid"), m["uid"]))
             if entry and attr.get("name") != m["name"]:
                 err("plugin-meta.xml name doesn't match the manifest")
+            # MPC OS 3.10.1+: "VST2 Plugins/<Manufacturer> - VST - <Name>/plugin.json" (Akai's folder format) lists the plugin
+            pjb = files.get(base + "plugin.json")
+            if pjb is None:
+                (err if m.get("vst2") else warn)("no plugin.json in the plugin folder: MPC OS 3.10.1 and later will not list it from a VST2 Plugins folder")
+            else:
+                try:
+                    pj = json.loads(pjb)
+                except ValueError:
+                    pj = None
+                    err("plugin.json is not valid JSON")
+                if isinstance(pj, dict):
+                    key = "file64" if m["arch"] == "aarch64" else "file32"
+                    if pj.get("format") != "vst2":
+                        warn("plugin.json has no \"format\": \"vst2\" (Akai's plugin.json schema requires it; MPC OS 3.10.1 lists it without, for now)")
+                    if "%s - VST - %s" % (pj.get("manufacturer"), pj.get("name")) != m["skin"]:
+                        err("plugin.json manufacturer/name do not make the folder name %r" % m["skin"])
+                    uid = str(pj.get("uid", ""))
+                    try:
+                        uidn = int(uid, 16) if uid.lower().startswith("0x") else int(uid) if uid.isdigit() else int.from_bytes(uid.encode("latin-1"), "big") if len(uid) == 4 else -1
+                    except ValueError:
+                        uidn = -1
+                    if uidn != int(str(m["uid"]), 16):
+                        err("plugin.json uid %r is not the manifest uid %s" % (uid, m["uid"]))
+                    if pj.get(key) != m["so"]:
+                        err("plugin.json %s must be %r (the .so at the folder root), not %r" % (key, m["so"], pj.get(key)))
+                    if not isinstance(pj.get("numOutputs", 2), int) or pj.get("numOutputs", 2) <= 0:
+                        err("plugin.json numOutputs must be more than 0 (MPC does not list a plugin with none)")
+                    if pj.get("kind", "instrument") not in ("instrument", "effect"):
+                        err("plugin.json kind must be instrument or effect")
             for e in m.get("extras", []):
                 if not re.fullmatch(r"[A-Za-z0-9._-]+(/[A-Za-z0-9._-]+)*", e) or ".." in e.split("/"):
                     err("bad extra path %r" % e)
@@ -419,7 +475,8 @@ def check(zpath, catalog=False, expect_id=None, expect_repo=None, require_portab
     # installer: regenerate from the current template and compare (releases of the old layout were made by older templates)
     sub = {"@NAME@": m["name"], "@SO_NAME@": m["so"], "@SKIN@": m.get("skin", ""),
            "@EXTRAS@": " ".join("'%s'" % e for e in m.get("extras", [])), "@VERSION@": m["version"],
-           "@UID@": str(m.get("uid", "")), "@LEGACY_SO@": "/sdcard/vst/" + m["so"], "@USER_DATA@": " ".join(m.get("user_data", []))}
+           "@UID@": str(m.get("uid", "")), "@LEGACY_SO@": "/sdcard/vst/" + posixpath.basename(m["so"]), "@USER_DATA@": " ".join(m.get("user_data", [])),
+           "@RETIRE@": ":".join(m.get("retire", [])), "@ID@": str(m.get("id", ""))}
     for script in ([] if legacy else list(ADDIN_SCRIPTS) if addin else ["install.sh", "uninstall.sh"]):
         tpl = os.path.join(HERE, "release", "addin" if addin else "", script)
         if os.path.exists(tpl) and script in files:

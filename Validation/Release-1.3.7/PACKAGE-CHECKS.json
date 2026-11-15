@@ -1,0 +1,18 @@
+[
+  {
+    "arch": "armv7",
+    "package": "ClideaN-MPC-1.3.7-mpc-armv7.zip",
+    "sha256": "b0422b86d508ad403a143e2434fce9b1984b89085d186a3c4124009f7b7d3c7b",
+    "engine_sha256": "c2e36979090662a95d7216a083b775e0d0743273d3dc693ded42cc6b25e24879",
+    "skin_pngs_identical_to_1_3_6": true,
+    "official_manifest": true
+  },
+  {
+    "arch": "aarch64",
+    "package": "ClideaN-MPC-1.3.7-mpc-aarch64.zip",
+    "sha256": "b13be28cbb92e332a8c9ca8ea35fba26cf77e6c74a6d5b6bcf238c24a7a82a06",
+    "engine_sha256": "9d591e54cba8a67abcfd360ad6f8784687af0f59fb0ab3b300a3401dd83d28c7",
+    "skin_pngs_identical_to_1_3_6": true,
+    "official_manifest": true
+  }
+]

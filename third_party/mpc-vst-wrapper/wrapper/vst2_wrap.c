@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
+#include <strings.h>
 #include <stdio.h>
 #include <math.h>
 #include <ctype.h>
@@ -159,6 +160,7 @@ typedef struct {
 #define MPC_CHUNK_BYTES 8192
 #endif
     char chunk[MPC_CHUNK_BYTES];
+    pthread_mutex_t chunk_lock; /* UI serialization only; audio never takes this lock. */
     pthread_mutex_t lock;    /* one engine call at a time: see eng_set() */
     int nrpn;                /* HAS_NRPN: the parameter CC 99/98 selected (-1: none), its coarse value from CC 6 */
     int nrpn_msb;
@@ -174,6 +176,33 @@ typedef struct {
 } wrap_t;
 
 static const mpc_engine_t *g_api;
+#if defined(PICN_FACTORY_PROGRAMS)
+_Static_assert(MPC_CHUNK_BYTES >= 20480,"PICN8 requires a larger state chunk");
+extern size_t picn_state_snapshot_bytes(void);
+extern void picn_state_capture(void *,void *);
+extern int picn_state_write(const void *,char *,int);
+#endif
+static void init_control_lock(pthread_mutex_t *lock){
+    pthread_mutexattr_t ma;pthread_mutexattr_init(&ma);
+    pthread_mutexattr_settype(&ma,PTHREAD_MUTEX_RECURSIVE);
+    pthread_mutexattr_setprotocol(&ma,PTHREAD_PRIO_INHERIT);
+    pthread_mutex_init(lock,&ma);pthread_mutexattr_destroy(&ma);
+}
+/* Called with exactly one control-lock level; host callbacks may re-enter. */
+static void host_notify(wrap_t *w,int op,int idx,float value){
+    pthread_mutex_unlock(&w->lock);
+    w->master(&w->fx,op,idx,0,0,value);
+    pthread_mutex_lock(&w->lock);
+}
+static void recall_ui(wrap_t *w){
+    for(int i=0;i<NPARAMS;i++){
+        w->open[i]=0;w->holdFrames[i]=0;w->changed[i]=0;w->cc_changed[i]=0;
+        w->last_pos[i]=-1;w->qacc[i]=0;
+    }
+    w->cc_report=0;w->cc_delivery_active=0;w->need_update_display=1;
+    /* Engine changed_all supplies canonical keys, never the retired selectors. */
+}
+
 
 /* One engine call at a time per instance. A JUCE host (MPC's) sets and reads parameters, chunks and displays on its
  * message thread while audio runs on another, and most engines assume a single caller (a voice-count change emptied a
@@ -216,12 +245,12 @@ static float str_to_norm(const param_t *p, const char *s) {
             for (int i = 0; i < p->nopts; i++)
                 if (!strcasecmp(s, p->opts[i])) idx = i;
         if (idx < 0) idx = 0;
-        return p->nopts > 1 ? (float)idx / (p->nopts - 1) : 0;
+        return p->nopts > 1 ? clamp01((float)idx / (p->nopts - 1)) : 0;
     }
     return p->max > p->min ? clamp01((float)((atof(s) - p->min) / (p->max - p->min))) : 0;
 }
 
-static float get_norm(wrap_t *w, int i) {
+static float get_norm_locked(wrap_t *w, int i) {
     char buf[64];
     if (i < 0 || i >= NPARAMS) return 0;
     if (i == 0 && __atomic_load_n(&w->has_pend0, __ATOMIC_ACQUIRE)) return w->pend0;   /* set, not applied yet */
@@ -235,6 +264,12 @@ static float get_norm(wrap_t *w, int i) {
     if (eng_get(w, PARAMS[i].key, buf, sizeof buf) <= 0) return PARAMS[i].def;
     return str_to_norm(&PARAMS[i], buf);
 }
+static float get_norm(wrap_t *w, int i){
+    wrap_t *guard=w;pthread_mutex_lock(&guard->lock);
+    float result = get_norm_locked(w,i);
+    pthread_mutex_unlock(&guard->lock);return result;
+}
+
 
 /* Where a param that moves in whole steps (an option list, a whole-number value) lands, in steps from its minimum.
  * The host nudges it two ways: the data wheel sends the current value plus a fraction of a step, while a drag or a
@@ -249,7 +284,7 @@ static float settle(float pos, float cur, float last) {
     return dir > 0 ? ceilf(pos - 0.001f) : floorf(pos + 0.001f);
 }
 
-static void set_param_now(AEffect *e, int32_t i, float n) {
+static void set_param_now_locked(AEffect *e, int32_t i, float n) {
     wrap_t *w = e->object;
     TRACE(0, i, n);
     char buf[64];
@@ -370,6 +405,12 @@ static void set_param_now(AEffect *e, int32_t i, float n) {
      * change within 100 ms (housekeeping); "refresh_display" opts a param back in for unpolled text that depends on it. */
     if (p->refresh_display) w->need_update_display = 1;   /* deferred to processReplacing(), see the step_target branch */
 }
+static void set_param_now(AEffect *e, int32_t i, float n){
+    wrap_t *guard=e->object;pthread_mutex_lock(&guard->lock);
+    set_param_now_locked(e,i,n);
+    pthread_mutex_unlock(&guard->lock);
+}
+
 
 /* MPC's plugin host (JUCE) sets parameter 0 to the far end of its range and straight back whenever it gets ready to play:
  * on insert and on every STOP ("a dodgy hack to force some plugins to initialise the sample rate", for plugins without an
@@ -377,13 +418,19 @@ static void set_param_now(AEffect *e, int32_t i, float n) {
  * is a preset, and every knob moved since goes back to it. So a host set of parameter 0 waits for the next block (or for
  * a read of it, its display text, a preset, the state, another parameter) and only the last one counts; a pair that ends
  * where it started is dropped. The host's own toggle reads nothing in between. */
-static void flush_pend0(AEffect *e) {
+static void flush_pend0_locked(AEffect *e) {
     wrap_t *w = e->object;
     if (!__atomic_exchange_n(&w->has_pend0, 0, __ATOMIC_ACQ_REL)) return;
     if (fabsf(w->pend0 - w->pend0_from) > 1e-6f) set_param_now(e, 0, w->pend0);
 }
+static void flush_pend0(AEffect *e){
+    wrap_t *guard=e->object;pthread_mutex_lock(&guard->lock);
+    flush_pend0_locked(e);
+    pthread_mutex_unlock(&guard->lock);
+}
 
-static void setParameter(AEffect *e, int32_t i, float n) {
+
+static void setParameter_locked(AEffect *e, int32_t i, float n) {
     wrap_t *w = e->object;
     if (i == 0 && NPARAMS > 0) {
         if (!__atomic_load_n(&w->has_pend0, __ATOMIC_ACQUIRE)) w->pend0_from = get_norm(w, 0);
@@ -394,13 +441,25 @@ static void setParameter(AEffect *e, int32_t i, float n) {
     flush_pend0(e);
     set_param_now(e, i, n);
 }
+static void setParameter(AEffect *e, int32_t i, float n){
+    wrap_t *guard=e->object;pthread_mutex_lock(&guard->lock);
+    setParameter_locked(e,i,n);
+    pthread_mutex_unlock(&guard->lock);
+}
 
-static float getParameter(AEffect *e, int32_t i) {
+
+static float getParameter_locked(AEffect *e, int32_t i) {
     if (i == 0) flush_pend0(e);   /* a read applies a held parameter 0: the host reads back what the engine took */
     float v = get_norm(e->object, i);
     TRACE(1, i, v);
     return v;
 }
+static float getParameter(AEffect *e, int32_t i){
+    wrap_t *guard=e->object;pthread_mutex_lock(&guard->lock);
+    float result = getParameter_locked(e,i);
+    pthread_mutex_unlock(&guard->lock);return result;
+}
+
 
 static void eng_song_pos(wrap_t *w, double ppq, double bpm, int playing, int frames) {
     pthread_mutex_lock(&w->lock); g_api->song_pos(w->dsp, ppq, bpm, playing, frames); pthread_mutex_unlock(&w->lock);
@@ -414,9 +473,7 @@ static void update_transport(wrap_t *w, const VstTimeInfo *ti) {
     if (ppq_ok) w->ppq = ti->ppqPos;
 }
 
-static void update_tempo(wrap_t *w, int32_t n) {
-    VstTimeInfo *ti = (VstTimeInfo *)w->master(&w->fx, audioMasterGetTime, 0,
-                                              kVstTempoValid | ((HAS_TRANSPORT || HAS_SONG_POS) ? (kVstPpqPosValid | (1 << 12)) : 0), 0, 0);
+static void apply_tempo(wrap_t *w, int32_t n,const VstTimeInfo *ti) {
     if (!ti) { if (HAS_SONG_POS) eng_song_pos(w, -1.0, 0.0, 0, n); return; }
     if (HAS_TRANSPORT) update_transport(w, ti);
     if (HAS_SONG_POS) {   /* ppq < 0 tells the engine the host gave no position */
@@ -437,6 +494,13 @@ static void update_tempo(wrap_t *w, int32_t n) {
         snprintf(buf, sizeof buf, "%.2f", w->bpm);
         eng_set(w, "lfo_bpm", buf);
     }
+}
+
+static void update_tempo(wrap_t *w,int32_t n){
+    VstTimeInfo *host=(VstTimeInfo *)w->master(&w->fx,audioMasterGetTime,0,
+        kVstTempoValid|((HAS_TRANSPORT||HAS_SONG_POS)?(kVstPpqPosValid|(1<<12)):0),0,0);
+    VstTimeInfo time;if(host)time=*host;
+    pthread_mutex_lock(&w->lock);apply_tempo(w,n,host?&time:NULL);pthread_mutex_unlock(&w->lock);
 }
 
 /* accumulate=1 is VST2's legacy process(), which must ADD to the output buffers; hosts here call
@@ -502,13 +566,18 @@ static void render_events(wrap_t *w, float **out, int32_t n, int accumulate) {
 static void housekeeping(AEffect *e, int32_t n) {
     wrap_t *w = e->object;
     if (HAS_LFO_BPM || HAS_TRANSPORT || HAS_SONG_POS) update_tempo(w, n);
+    pthread_mutex_lock(&w->lock);
+    int sent=0; /* One budget includes explicit momentary releases. */
     /* A trigger param (e.g. Generate) fired: tell the host it is back to 0 so
      * buttons bound to it drop their highlight. Done here, not inside
      * setParameter, so the host is not re-entered from its own call. */
     for (int i = 0; i < NPARAMS; i++)
-        if (w->holdFrames[i] > 0 && (w->holdFrames[i] -= n) <= 0) { w->holdFrames[i] = 0; w->master(&w->fx, audioMasterAutomate, i, 0, 0, 0.0f); }
+        if(w->holdFrames[i]>0 && (w->holdFrames[i]-=n)<=0){
+            if(sent<PICN_NOTIFICATION_BUDGET){w->holdFrames[i]=0;host_notify(w,audioMasterAutomate,i,0);sent++;}
+            else w->holdFrames[i]=1; /* Preserve the explicit zero until there is room. */
+        }
     for (int i = 0; i < NPARAMS; i++)
-        if (w->changed[i]) { w->changed[i] = 0; w->master(&w->fx, audioMasterAutomate, i, 0, 0, get_norm(w, i)); }
+        if (w->changed[i]) { w->changed[i] = 0; w->cc_changed[i]=1; }
     /* Text params are polled, not only read after a screen tap, because MIDI alone can change them (a pad plays
      * a chord, nothing on screen touched):
      * - list-tile selection ("<key>_on"), every 10 ms: the host doesn't re-read a button's value on UpdateDisplay,
@@ -531,7 +600,7 @@ static void housekeeping(AEffect *e, int32_t n) {
                 int on = atoi(b2) ? 1 : 0;
                 if (w->last_on[i] != on + 1) {
                     w->last_on[i] = (signed char)(on + 1);
-                    w->master(&w->fx, audioMasterAutomate, i, 0, 0, (float)on);
+                    w->cc_changed[i]=1;
                     w->need_update_display = 1;
                 }
             } else
@@ -556,7 +625,7 @@ static void housekeeping(AEffect *e, int32_t n) {
             for (int i = 0; i < NPARAMS; i++) {
                 if (PARAMS[i].momentary || popup_is(i) || PARAMS[i].string_display) continue;
                 float v = get_norm(w, i);
-                if (fabsf(v - w->last_norm[i]) > 1e-4f) { w->last_norm[i] = v; w->master(&w->fx, audioMasterAutomate, i, 0, 0, v); }
+                if (fabsf(v - w->last_norm[i]) > 1e-4f) { w->last_norm[i] = v; w->cc_changed[i]=1; }
             }
         }
     }
@@ -589,7 +658,7 @@ static void housekeeping(AEffect *e, int32_t n) {
     int cc_due = (w->cc_report -= n) <= 0;
     if (cc_due) w->cc_report = 1024;
     if (cc_due || w->cc_delivery_active) {
-        int sent = 0, scanned = 0;
+        int scanned = 0;
         w->cc_delivery_active = 0;
         while (scanned < NPARAMS && sent < PICN_NOTIFICATION_BUDGET) {
             int i = w->cc_cursor;
@@ -597,7 +666,7 @@ static void housekeeping(AEffect *e, int32_t n) {
             scanned++;
             if (w->cc_changed[i]) {
                 w->cc_changed[i] = 0;
-                w->master(&w->fx, audioMasterAutomate, i, 0, 0, get_norm(w, i));
+                host_notify(w,audioMasterAutomate,i,get_norm(w,i));
                 sent++;
             }
         }
@@ -609,8 +678,9 @@ static void housekeeping(AEffect *e, int32_t n) {
     if (w->need_update_display && w->update_wait <= 0) {
         w->need_update_display = 0;
         w->update_wait = 2205;
-        w->master(&w->fx, audioMasterUpdateDisplay, 0, 0, 0, 0.0f);
+        host_notify(w,audioMasterUpdateDisplay,0,0);
     }
+    pthread_mutex_unlock(&w->lock);
 }
 
 #ifdef PLUG_EFFECT
@@ -733,7 +803,7 @@ static void set_program(wrap_t *w, int idx) {
     char accepted[8];
     if (eng_get(w,"state_valid",accepted,sizeof accepted)<=0 || atoi(accepted)!=1) return;
     w->program=idx;
-    for(int i=0;i<NPARAMS;i++) { w->open[i]=0; w->holdFrames[i]=0; w->changed[i]=!popup_is(i); }
+    recall_ui(w);
 #elif defined(NPRESETS)
     for (int i = 0; i < PRESETS[idx].n; i++) {
         eng_set(w, PARAMS[PRESETS[idx].values[i].param].key, PRESETS[idx].values[i].value);
@@ -770,14 +840,14 @@ static void program_name(wrap_t *w, int idx, char *out) {
 #endif
 }
 
-static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void *p, float o) {
+static intptr_t dispatcher_locked(AEffect *e, int32_t op, int32_t idx, intptr_t v, void *p, float o) {
     wrap_t *w = e->object;
     (void)o;
     switch (op) {
     case effOpen: return 1;
     case effClose:
         g_api->destroy(w->dsp);
-        pthread_mutex_destroy(&w->lock);
+        pthread_mutex_destroy(&w->chunk_lock);pthread_mutex_destroy(&w->lock);
         free(w);
         return 1;
 #ifdef PLUG_EFFECT
@@ -849,26 +919,14 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
     case effCanDo:
         return (!strcmp(p, "receiveVstEvents") || !strcmp(p, "receiveVstMidiEvent") ||
                 !strcmp(p, "receiveVstTimeInfo")) ? 1 : -1;
-    case effGetChunk: {
-        flush_pend0(e);
-        #if defined(PICN_FACTORY_PROGRAMS)
-        int prefix=snprintf(w->chunk,sizeof w->chunk,"PCPROG1 %d\n",w->program);
-        if(prefix<0 || prefix>=(int)sizeof w->chunk) return 0;
-        int len=eng_get(w,"state",w->chunk+prefix,sizeof w->chunk-prefix);
-#else
-        int len = eng_get(w, "state", w->chunk, sizeof w->chunk);
-#endif
-        if (len <= 0) return 0;
-        *(void **)p = w->chunk;
-        return (intptr_t)strlen(w->chunk) + 1;
-    }
+    case effGetChunk: return 0; /* handled outside the control mutex */
     case effSetChunk: {
         if (!p || v <= 0 || (size_t)v > sizeof w->chunk || memchr(p, 0, (size_t)v - 1)) return 0;
-        memcpy(w->chunk, p, v);
-        w->chunk[v - 1] = 0;
+        char restored[MPC_CHUNK_BYTES];
+        memcpy(restored,p,v);restored[v-1]=0;
         __atomic_store_n(&w->has_pend0, 0, __ATOMIC_RELEASE);   /* a restore sets parameter 0 too */
         #if defined(PICN_FACTORY_PROGRAMS)
-        const char *state=w->chunk; int saved_program=0;
+        const char *state=restored; int saved_program=0;
         if(!strncmp(state,"PCPROG1 ",8)) {
             char *end; long n=strtol(state+8,&end,10);
             if(end==state+8 || *end!='\n' || n<0 || n>2147483647L) return 0;
@@ -882,16 +940,40 @@ static intptr_t dispatcher(AEffect *e, int32_t op, int32_t idx, intptr_t v, void
         char accepted[8];
         if(eng_get(w,"state_valid",accepted,sizeof accepted)<=0 || atoi(accepted)!=1) return 0;
         w->program=saved_program;
-        for(int i=0;i<NPARAMS;i++){w->open[i]=0;w->holdFrames[i]=0;w->changed[i]=!popup_is(i);}
+        recall_ui(w);
         return 1;
 #else
-        eng_set(w, "state", w->chunk);
+        eng_set(w, "state", restored);
         char accepted[8];
         return eng_get(w, "state_valid", accepted, sizeof accepted) > 0 && atoi(accepted) == 1;
 #endif
     }
     default: return 0;
     }
+}
+
+static intptr_t dispatcher(AEffect *e,int32_t op,int32_t idx,intptr_t v,void *p,float o){
+    wrap_t *w=e->object;
+    if(op==effClose)return dispatcher_locked(e,op,idx,v,p,o);
+    if(op==effGetChunk){
+#if defined(PICN_FACTORY_PROGRAMS)
+        if(!p)return 0;
+        void *snapshot=malloc(picn_state_snapshot_bytes());if(!snapshot)return 0;
+        pthread_mutex_lock(&w->chunk_lock);
+        pthread_mutex_lock(&w->lock);flush_pend0(e);
+        int program=w->program;picn_state_capture(w->dsp,snapshot);
+        pthread_mutex_unlock(&w->lock);
+        int prefix=snprintf(w->chunk,sizeof w->chunk,"PCPROG1 %d\n",program);
+        int len=prefix>0&&prefix<(int)sizeof w->chunk?picn_state_write(snapshot,w->chunk+prefix,sizeof w->chunk-prefix):0;
+        free(snapshot);if(len>0)*(void **)p=w->chunk;
+        pthread_mutex_unlock(&w->chunk_lock);return len>0?prefix+len+1:0;
+#else
+        return 0;
+#endif
+    }
+    pthread_mutex_lock(&w->lock);
+    intptr_t result=dispatcher_locked(e,op,idx,v,p,o);
+    pthread_mutex_unlock(&w->lock);return result;
 }
 
 __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallback master) {
@@ -905,12 +987,8 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
 #endif
     wrap_t *w = calloc(1, sizeof *w);
     if (!w) return NULL;
-    pthread_mutexattr_t ma;
-    pthread_mutexattr_init(&ma);
-    pthread_mutexattr_settype(&ma, PTHREAD_MUTEX_RECURSIVE);
-    pthread_mutexattr_setprotocol(&ma, PTHREAD_PRIO_INHERIT);
-    pthread_mutex_init(&w->lock, &ma);
-    pthread_mutexattr_destroy(&ma);
+    init_control_lock(&w->lock);
+    pthread_mutex_init(&w->chunk_lock,NULL);
 #ifdef MODULE_SUBDIR
     char data_dir[600], here[512];
     const char *module_dir = MODULE_DIR;   /* an absolute MODULE_DIR is still the fallback */
@@ -920,13 +998,13 @@ __attribute__((visibility("default"))) AEffect *VSTPluginMain(audioMasterCallbac
 #else
     w->dsp = g_api->create(MODULE_DIR);
 #endif
-    if (!w->dsp) { pthread_mutex_destroy(&w->lock); free(w); return NULL; }
+    if (!w->dsp) { pthread_mutex_destroy(&w->chunk_lock);pthread_mutex_destroy(&w->lock); free(w); return NULL; }
 #if defined(PICN_FACTORY_PROGRAMS)
     /* Load the same complete INIT state that the native program menu names. */
     g_api->set_param(w->dsp,"state",PICN_FACTORY[0].state);
     char initial_valid[8];
     if(g_api->get_param(w->dsp,"state_valid",initial_valid,sizeof initial_valid)<=0 || atoi(initial_valid)!=1) {
-        g_api->destroy(w->dsp); pthread_mutex_destroy(&w->lock); free(w); return NULL;
+        g_api->destroy(w->dsp); pthread_mutex_destroy(&w->chunk_lock);pthread_mutex_destroy(&w->lock); free(w); return NULL;
     }
 #endif
     w->master = master;

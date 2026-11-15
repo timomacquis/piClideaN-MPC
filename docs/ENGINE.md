@@ -24,7 +24,7 @@ Note events use absolute ALSA real-time timestamps. Real transport discontinuiti
 
 ## Note lifetime
 
-GATE duration is the ratchet subdivision multiplied by the line's gate percentage and converted through the host tempo. Scheduled Note Off is limited by the current host loop boundary.
+GATE duration uses the effective per-step lock or inherited line gate, multiplied by the ratchet subdivision and converted through host tempo. Ordinary host loop returns preserve the continuous lane clock; they are not treated as seeks that restart independent lane cycles.
 
 HOLD sends no duration-based Note Off. The next effective trigger on the same lane schedules the previous Note Off immediately before its Note On at the same timestamp. A held note survives rests and rejected probability decisions. The final ratchet repeat remains held.
 
@@ -42,7 +42,7 @@ Exceeding a callback budget invokes the fail-silent release path rather than an 
 
 ## State
 
-The PICN4 state stores routing, selection, lane fields, per-step overrides, playback mode, rotation settings, seeds, phase origins and sixteen HOLD flags. Parsing validates the complete payload before replacing engine state. The wrapper reserves 32 KiB for the state chunk. Saving a project does not save an in-flight note or pending phase-reset request as a live event.
+The current writer uses PICN8 when A/B variation state is present, otherwise PICN7. Readers retain PICN1–4 and PICN6–7 compatibility; PICN5 is explicitly rejected. State stores routing, selection, lane fields, per-step overrides, playback mode, rotation settings, seeds, phase origins and sixteen HOLD flags. Parsing validates the complete payload before replacing engine state. The wrapper reserves 32 KiB for the state chunk. Saving a project does not save an in-flight note or pending phase-reset request as a live event.
 
 ## Lane activity feedback
 
@@ -57,7 +57,7 @@ Four slots each own two oscillators and one unique lane assignment. Disabled and
 
 ## Native value updates
 
-Engine changes are collected in batches of at most 32 per audio block. Pending host value notifications are coalesced and delivered with a round-robin cursor, at most eight from that queue per block. Pending values remain queued for subsequent blocks. MOD choices update native handles without requesting a global screen rebuild. This limits callback bursts without changing MIDI scheduling.
+Engine changes are collected in batches of at most 32 per audio block. Pending host value notifications are coalesced and delivered with a round-robin cursor, at most eight host value notifications per block, including momentary releases and wrapper-generated changes. Pending values remain queued for subsequent blocks. MOD choices update native handles without requesting a global screen rebuild. This limits callback bursts without changing MIDI scheduling.
 
 Applied scale and root metadata are saved with the project. Newly saved states use a SCALE extension that older plugin versions cannot read; retain a project copy before downgrading.
 
@@ -72,6 +72,12 @@ The two track pages share a 128-frame miniature atlas with repeated state platea
 
 Each lane stores 32 signed-byte GATE values: -1 means inheritance and 10–95 is an explicit lock. The fourth contextual Q-Link edits line GATE in LINE and selected-step GATE in EDIT. A retired read-only preview handle drives its static lock artwork, without adding or reordering parameter indices. Stored GATE is the base for existing modulation; HOLD retains note ownership priority.
 
-An optional GATES suffix is validated before state mutation. Old projects without it inherit line GATE; older plugin versions reject new states. RAND evaluates drafts and commits only a result whose effective trigger density is at most floor(3 × STEPS / 4). Nonselected controls remain intact, and impossible drafts are discarded. Rd ALL applies the same limit and preserves mute states and pitches.
+An optional GATES suffix is validated before state mutation. Old projects without it inherit line GATE; older plugin versions reject new states. RAND evaluates drafts and commits only a result whose effective trigger density is at most floor(3 × STEPS / 4). Nonselected controls remain intact, and impossible drafts are discarded. Rdm 8 applies coordinated generation to lanes 1–8, preserves mute states and pitches, and leaves lanes 9–16 intact. Guided proposals use a separate worker and immutable snapshots; stale results are not committed over subsequent edits. Compact GMD-derived tables guide probabilities without embedding a dataset or neural runtime. See [GROOVE-STATISTICS.md](GROOVE-STATISTICS.md).
 
 COUNT-IN is explicit in CONFIG and defaults to OFF. It suppresses pattern/LFO note emission during selected host pre-roll, with bounded timeout and reset handling. Native parameter notifications remain bounded and graphics remain cached.
+
+## Maintenance 1.3.7
+
+Incoming MIDI is inert and never changes editor selection. Complete recall uses the engine change queue, avoiding legacy selection aliases. Wrapper bookkeeping transactions share the recursive priority-inheriting mutex. Host notifications release it before calling the host. State saving captures a musical-only immutable snapshot under this mutex and formats it outside, using a separate UI-only chunk-buffer mutex. Chunk format and published indices are unchanged.
+
+Historical MIDI failures are retained as counters; CHECK MIDI reflects a two-second recent-failure window or pending Note Off. Shared-pitch overlap rejection has a separate counter and SHARED NOTE remains visible.

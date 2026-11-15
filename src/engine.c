@@ -73,7 +73,7 @@ typedef struct {
  void *guidance_worker;int guidance_async;unsigned control_revision,guidance_sequence,guidance_stamp;
  Variation alternate[LANES];unsigned variation_ready;unsigned char variation_bank[LANES];int variation_mask,variation_strength,variation_ui,variation_status;int rand_touch,rand_touch_long;double rand_touch_at;
  QMove qmove[8];unsigned q_valid;
- unsigned revision,random,errors;int slot;
+ unsigned revision,random,errors,overlap_rejections;double midi_error_until;int slot;
  snd_seq_t *seq;int port,queue;snd_seq_remove_events_t *rem;
  int active_note[LANES],active_ch[LANES];
  double active_off[LANES],queue_now,queue_end,expected_ppq,last_host_ppq;
@@ -88,6 +88,9 @@ typedef struct {
  unsigned char visual_dirty[VISUALS]; int visual_last[VISUALS],visual_ready,visual_frames,visual_cursor;int ui_offset[LANES];
  double last_changed[CHANGED_COUNT];unsigned char have_changed[CHANGED_COUNT]; /* bounded numeric identifiers, no allocation during callback */
 } Engine;
+/* Historical counters do not latch the visible warning forever. */
+static double diagnostic_time(void){struct timespec t;clock_gettime(CLOCK_MONOTONIC,&t);return t.tv_sec+t.tv_nsec*1e-9;}
+static void midi_problem(Engine *e){e->errors++;e->midi_error_until=diagnostic_time()+2.;}
 static int clampi(int v,int a,int b){return v<a?a:v>b?b:v;}
 static unsigned rng(Engine *e){unsigned x=e->random;x^=x<<13;x^=x>>17;x^=x<<5;return e->random=x?x:0x67419321u;}
 static int integer(const char *s,int *out){char *end;errno=0;double n=strtod(s,&end);if(errno||end==s||*end||!isfinite(n)||n<INT_MIN||n>INT_MAX)return 0;*out=(int)lround(n);return 1;}
@@ -150,17 +153,17 @@ static int cancel_tag(Engine *e,int lane){
  snd_seq_remove_events_set_queue(e->rem,e->queue);
  snd_seq_remove_events_set_condition(e->rem,SND_SEQ_REMOVE_OUTPUT|SND_SEQ_REMOVE_TAG_MATCH);
  snd_seq_remove_events_set_tag(e->rem,lane+1);
- if(snd_seq_remove_events(e->seq,e->rem)<0){e->errors++;return 0;}return 1;
+ if(snd_seq_remove_events(e->seq,e->rem)<0){midi_problem(e);return 0;}return 1;
 }
 static int send_event(Engine *e,int line,int on,int n,int ch,int vel,double at){
  if(!e->seq)return 0;snd_seq_event_t v;snd_seq_ev_clear(&v);snd_seq_ev_set_source(&v,e->port);snd_seq_ev_set_subs(&v);v.tag=(unsigned char)(line+1);
  if(on)snd_seq_ev_set_noteon(&v,ch,n,vel);else snd_seq_ev_set_noteoff(&v,ch,n,0);
  if(at>=0){
-  if(!isfinite(at)||at>UINT_MAX-1){e->errors++;return 0;}
+  if(!isfinite(at)||at>UINT_MAX-1){midi_problem(e);return 0;}
   snd_seq_real_time_t t;t.tv_sec=(unsigned)at;t.tv_nsec=(unsigned)((at-t.tv_sec)*1e9);
   snd_seq_ev_schedule_real(&v,e->queue,0,&t);
  }else snd_seq_ev_set_direct(&v);
- if(snd_seq_event_output_direct(e->seq,&v)<0){e->errors++;return 0;}return 1;
+ if(snd_seq_event_output_direct(e->seq,&v)<0){midi_problem(e);return 0;}return 1;
 }
 static void flash_enqueue(Engine *e,int line,double at){
  unsigned count=e->flash_count[line],read=e->flash_read[line];
@@ -208,7 +211,7 @@ static void trigger(Engine *e,const Hit *h,double bpm,double at,double max_durat
  int i=h->line;if(mod_pattern_blocked(e,i))return;if(!audible(e,i)||(e->release_pending&(1u<<i)))return;int n=note(e,i),hold=e->lane[i].hold;
  for(int k=0;k<LANES;k++){
   if(k==i&&hold)continue;
-  if(e->active_note[k]==n&&e->active_ch[k]==e->channel&&((e->release_pending&(1u<<k))||e->active_off[k]>at+1e-7)){e->errors++;return;}
+  if(e->active_note[k]==n&&e->active_ch[k]==e->channel&&((e->release_pending&(1u<<k))||e->active_off[k]>at+1e-7)){e->overlap_rejections++;return;}
  }
  double dur=fmin(h->duration*60./bpm,max_duration);if(!(dur>0))return;
  if(hold&&e->active_note[i]>=0){
@@ -230,11 +233,12 @@ static void *create(const char *dir){(void)dir;Engine *e=calloc(1,sizeof *e);if(
  for(int i=0;i<LANES;i++){init_lane(&e->lane[i],i);e->active_note[i]=-1;e->head[i]=-1;e->reset_at[i]=-1;}
 
  if(snd_seq_open(&e->seq,"default",SND_SEQ_OPEN_OUTPUT,SND_SEQ_NONBLOCK)>=0){char name[64];snprintf(name,sizeof name,"piClideaN MPC%s%d",e->slot?" ":"",e->slot?e->slot+1:1);if(e->slot==0)strcpy(name,"piClideaN MPC");snd_seq_set_client_name(e->seq,name);e->port=snd_seq_create_simple_port(e->seq,"Out",SND_SEQ_PORT_CAP_READ|SND_SEQ_PORT_CAP_SUBS_READ,SND_SEQ_PORT_TYPE_MIDI_GENERIC|SND_SEQ_PORT_TYPE_APPLICATION);char qname[80];snprintf(qname,sizeof qname,"%s Clock",name);e->queue=snd_seq_alloc_named_queue(e->seq,qname);
- if(snd_seq_set_client_pool_output(e->seq,4096)<0)e->errors++;
- if(e->port>=0&&e->queue>=0&&snd_seq_remove_events_malloc(&e->rem)>=0&&snd_seq_queue_status_malloc(&e->queue_status)>=0){if(snd_seq_start_queue(e->seq,e->queue,NULL)<0||snd_seq_drain_output(e->seq)<0){snd_seq_close(e->seq);e->seq=NULL;e->errors++;}}else{snd_seq_close(e->seq);e->seq=NULL;e->errors++;}}
- else{e->seq=NULL;e->errors++;}variation_reset(e);e->guidance_async=1;guidance_start(e);mod_preview_start(e);changed_all(e);return e;}
+ if(snd_seq_set_client_pool_output(e->seq,4096)<0)midi_problem(e);
+ if(e->port>=0&&e->queue>=0&&snd_seq_remove_events_malloc(&e->rem)>=0&&snd_seq_queue_status_malloc(&e->queue_status)>=0){if(snd_seq_start_queue(e->seq,e->queue,NULL)<0||snd_seq_drain_output(e->seq)<0){snd_seq_close(e->seq);e->seq=NULL;midi_problem(e);}}else{snd_seq_close(e->seq);e->seq=NULL;midi_problem(e);}}
+ else{e->seq=NULL;midi_problem(e);}variation_reset(e);e->guidance_async=1;guidance_start(e);mod_preview_start(e);changed_all(e);return e;}
 static void destroy(void *inst){Engine *e=inst;if(!e)return;guidance_stop(e);mod_preview_stop(e);panic_owned(e);for(int retry=0;retry<2&&e->release_pending;retry++)for(int i=0;i<LANES;i++)if(e->release_pending&(1u<<i))release(e,i);if(e->seq){if(e->queue>=0){snd_seq_stop_queue(e->seq,e->queue,NULL);snd_seq_free_queue(e->seq,e->queue);}snd_seq_close(e->seq);}if(e->rem)snd_seq_remove_events_free(e->rem);if(e->queue_status)snd_seq_queue_status_free(e->queue_status);if(e->slot>=0)atomic_fetch_and(&slots,~(1u<<e->slot));free(e);}
-static void midi(void *inst,const uint8_t *msg,int len){(void)inst;(void)msg;(void)len;/* no MIDI echo, no second note path */}
+/* Incoming musical notes must not drive editor selection or duplicate playback. */
+static void midi(void *inst,const uint8_t *msg,int len){(void)inst;(void)msg;(void)len;}
 /* Parse a complete lane index: l9 and l10 must never alias. */
 static int lane_prefix(const char *key,int *line,const char **suffix){
  if(key[0]!='l'||key[1]<'0'||key[1]>'9')return 0;
@@ -352,7 +356,7 @@ static int get_param(void *inst,const char *key,char *b,int size){if(size<=0)ret
  else if(sscanf(key,"g%d_%d",&i,&j)==2&&i>=0&&i<LANES&&j>=0&&j<32){Lane *t=&e->lane[i];n=j>=t->f[0]?4:((t->pattern>>j)&1);if(j<t->f[0]&&e->playing&&e->head[i]==j)n+=2;}
  else if(!strcmp(key,"line_label")){if(!e->mode)return snprintf(b,size,"%02d - %s",e->selected+1,sounds[l->f[11]]);return snprintf(b,size,"%02d - %c%02d",e->selected+1,'A'+e->bank,l->f[10]+1);}
  else if(!strcmp(key,"target_label"))return snprintf(b,size,"%s / CH %d / NOTE %d",e->mode?"DRUM TRACK":"INSTRUMENT",e->channel+1,note(e,e->selected));
- else if(!strcmp(key,"status"))return snprintf(b,size,"%s / %s%s%s",e->playing?"PLAY":"STOP",e->seq?"MIDI READY":"NO MIDI PORT",e->errors?" / CHECK MIDI":"",duplicates(e)?" / SHARED NOTE":"");
+ else if(!strcmp(key,"status"))return snprintf(b,size,"%s / %s%s%s",e->playing?"PLAY":"STOP",e->seq?"MIDI READY":"NO MIDI PORT",(e->release_pending||e->midi_error_until>diagnostic_time())?" / CHECK MIDI":"",duplicates(e)?" / SHARED NOTE":"");
  else if(!strcmp(key,"step_label"))return snprintf(b,size,"STEP %02d / %s",e->step+1,e->step>=l->f[0]?"OUTSIDE":((l->pattern>>e->step)&1)?"HIT":"REST");
  else if(!strcmp(key,"mapping_label"))return snprintf(b,size,"%s",e->mode?"FORCE REFERENCE":"INCIPIENCE NOTES");
  else if(!strcmp(key,"port_label")){if(!e->slot)return snprintf(b,size,"piClideaN MPC Out");return snprintf(b,size,"piClideaN MPC %d Out",e->slot+1);}
@@ -409,13 +413,13 @@ static void sort_hits(Hit *hits,int count){
 static int span(Engine *e,double a,double b,double bpm,double time_base,double cycle_end,int *budget){
  Hit hits[EVENTS];int nh=0;if(!(b>a))return 1;
  if(!mod_events(e,hits,&nh,a,b,bpm,time_base,budget))return 0;
- for(int i=0;i<LANES;i++){Lane *l=&e->lane[i];double d=step_beats[l->f[3]],k0=floor(a/d),k1=ceil(b/d);if(k1-k0>64){e->errors++;return 0;}
+ for(int i=0;i<LANES;i++){Lane *l=&e->lane[i];double d=step_beats[l->f[3]],k0=floor(a/d),k1=ceil(b/d);if(k1-k0>64){midi_problem(e);return 0;}
   for(double k=k0;k<k1;k++){double start=k*d;if(e->reset_at[i]>=0&&start>=e->reset_at[i]-1e-8){l->origin=start;e->reset_at[i]=-1;}int position=visit_index(l,k),source=source_index(l,position,k);if(!audible(e,i)||!effective_hit(l,source))continue;
    unsigned seed=mix32(l->seed^(unsigned)fmod(k,4294967295.)^mix32((unsigned)floor(k/4294967295.)));int mv[6];mod_step_values(e,i,k,source,(start-a)*60./bpm+e->mod_span_offset,bpm,mv);int prob=mv[1];if(prob<100&&(int)(seed%100)>=prob)continue;
    int human=mv[2],vel=clampi(mv[0]+(human?(int)(mix32(seed^0x984a21u)%(unsigned)(2*human+1))-human:0),1,127);
    int count=mv[4],decay=mv[5];double sub=d/count,velocity=vel;
    for(int r=0;r<count;r++){double beat=start+r*sub;int value=clampi((int)lround(velocity),0,127);velocity*=decay/100.;if(!value||beat<a||beat>=b)continue;
-    if(nh>=EVENTS||*budget<=0){e->errors++;return 0;}(*budget)--;hits[nh++]=(Hit){i,source,r,value,beat,sub*mv[3]/100.,0};}
+    if(nh>=EVENTS||*budget<=0){midi_problem(e);return 0;}(*budget)--;hits[nh++]=(Hit){i,source,r,value,beat,sub*mv[3]/100.,0};}
   }
  }
  sort_hits(hits,nh);
@@ -477,7 +481,7 @@ static void song_pos(void *inst,double ppq,double bpm,int playing,int frames){
  if(!playing||!isfinite(ppq)||ppq<0||ppq>1e9||!isfinite(bpm)||bpm<=0||bpm>1000||frames<=0){count_in_reset(&e->count_in);if(e->playing)panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
  double block=(double)frames/e->sample_rate*bpm/60.;
  if(!count_in_allow(&e->count_in,e->count_in_mode,playing,e->host_recording,ppq,block)){if(e->playing)panic_owned(e);clear_playhead(e);visual_snapshot(e,frames,0);return;}
- if(!isfinite(block)||block>4||!e->seq||!e->queue_status||snd_seq_get_queue_status(e->seq,e->queue,e->queue_status)<0){if(e->seq)e->errors++;panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
+ if(!isfinite(block)||block>4||!e->seq||!e->queue_status||snd_seq_get_queue_status(e->seq,e->queue,e->queue_status)<0){if(e->seq)midi_problem(e);panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
  const snd_seq_real_time_t *qt=snd_seq_queue_status_get_real_time(e->queue_status);
  e->queue_now=qt->tv_sec+qt->tv_nsec/1e9;
  /* The host PPQ is a measured position, not an exact sample-clock increment.
@@ -528,7 +532,7 @@ static void song_pos(void *inst,double ppq,double bpm,int playing,int frames){
   pos+=duration;elapsed+=duration;remaining-=duration;
   if(in_cycle&&pos>=e->cycle_b-1e-10){pos=e->cycle_a;e->lane_beat_offset+=e->cycle_b-e->cycle_a;}
  }
- if(remaining>1e-10){e->errors++;panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
+ if(remaining>1e-10){midi_problem(e);panic_owned(e);clear_playhead(e);visual_snapshot(e,0,1);return;}
  e->lane_next_beat=music_start+elapsed;e->lane_beat_offset=e->lane_next_beat-pos;
  e->queue_end=base+elapsed*60./bpm;e->expected_ppq=pos;e->last_host_ppq=host_ppq;
  int moved=0;

@@ -1,10 +1,16 @@
 # πClideaN
 
-**Version 1.3.6 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
+**Version 1.3.7 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
 
 ![πClideaN — PATTERN LINE, selective RAND](Cover.png)
 
 Build evolving rhythmic and melodic patterns with sixteen independent lanes, per-step expression, scales and a native touch interface. Drive synthesizers, drum instruments and sample tracks through the plugin’s dedicated MIDI output.
+
+## Maintenance 1.3.7
+
+More controlled preset/project recalls, coherent saves with formatting outside the engine mutex, synchronized controls, transient MIDI warnings and official architecture-specific plugin manifests. The musical workflow and touch interface are unchanged.
+
+[Release notes](docs/RELEASE-NOTES-1.3.7.md) · [Validation scope](docs/VALIDATION-1.3.7.md). Gen2 remains untested on hardware.
 
 ## Features
 
@@ -62,12 +68,12 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ## Download and setup
 
-Choose the package for your device. Both builds use πClideaN **1.3.6**.
+Choose the package for your device. Both builds use πClideaN **1.3.7**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.6/ClideaN-MPC-1.3.6-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
-| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.6/ClideaN-MPC-1.3.6-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.7/ClideaN-MPC-1.3.7-mpc-armv7.zip) | [Gen1 / Force guide](docs/INSTALLATION.md) |
+| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.7/ClideaN-MPC-1.3.7-mpc-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
 The 1.3.2 loop-continuity fix was validated on Force as candidate.1. Gen2 packages are built from the same sources with the Live III skin workaround and await device validation. Thanks to Thomas Phillips for the original Gen2 port. See [Gen2 validation](docs/GEN2-VALIDATION.md).
 

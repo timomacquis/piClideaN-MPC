@@ -106,12 +106,40 @@ static int evolution_get(Engine *e,const char *key,char *b,int size){Lane *l=&e-
  return snprintf(b,size,"%d",n);
 }
 /* PICN4 appends sixteen HOLD flags; older PICN1/2/3 load with GATE. */
-static int write_evolution(Engine *e,char *b,int size){int off=0;
+/* Immutable musical snapshot: no worker, ALSA or notification state. */
+typedef struct {
+ Lane lane[LANES]; ModLane mod[MOD_SLOTS]; int mod_pad[MOD_SLOTS];
+ int selected,mode,channel,bank,step,rhythm,row,edit_view,edit_tool,mod_selected;
+ int scale_applied_choice,scale_applied_start,count_in_mode;
+ Variation alternate[LANES]; unsigned variation_ready; unsigned char variation_bank[LANES];
+} PicnSavedState;
+static void capture_saved_state(const Engine *e,PicnSavedState *s){
+ memcpy(&s->lane,&e->lane,sizeof s->lane);
+ memcpy(&s->mod,&e->mod,sizeof s->mod);
+ memcpy(&s->mod_pad,&e->mod_pad,sizeof s->mod_pad);
+ memcpy(&s->selected,&e->selected,sizeof s->selected);
+ memcpy(&s->mode,&e->mode,sizeof s->mode);
+ memcpy(&s->channel,&e->channel,sizeof s->channel);
+ memcpy(&s->bank,&e->bank,sizeof s->bank);
+ memcpy(&s->step,&e->step,sizeof s->step);
+ memcpy(&s->rhythm,&e->rhythm,sizeof s->rhythm);
+ memcpy(&s->row,&e->row,sizeof s->row);
+ memcpy(&s->edit_view,&e->edit_view,sizeof s->edit_view);
+ memcpy(&s->edit_tool,&e->edit_tool,sizeof s->edit_tool);
+ memcpy(&s->mod_selected,&e->mod_selected,sizeof s->mod_selected);
+ memcpy(&s->scale_applied_choice,&e->scale_applied_choice,sizeof s->scale_applied_choice);
+ memcpy(&s->scale_applied_start,&e->scale_applied_start,sizeof s->scale_applied_start);
+ memcpy(&s->count_in_mode,&e->count_in_mode,sizeof s->count_in_mode);
+ memcpy(&s->alternate,&e->alternate,sizeof s->alternate);
+ memcpy(&s->variation_ready,&e->variation_ready,sizeof s->variation_ready);
+ memcpy(&s->variation_bank,&e->variation_bank,sizeof s->variation_bank);
+}
+static int write_saved_state(const PicnSavedState *e,char *b,int size){int off=0;
 #define PUT(...) do{int wrote=snprintf(b+off,size-off,__VA_ARGS__);if(wrote<0||wrote>=size-off)return 0;off+=wrote;}while(0)
  PUT("%s %d %d %d %d %d %d %d 1 ",e->variation_ready?"PICN8":"PICN7",e->selected,e->mode,e->channel,e->bank,e->step,e->rhythm,e->row);
  for(int i=0;i<LANES;i++)for(int j=0;j<NF;j++)PUT("%d ",e->lane[i].f[j]);
  PUT("%d %d ",e->edit_view,e->edit_tool);
- for(int i=0;i<LANES;i++){Lane *l=&e->lane[i];PUT("%d %d %d %d %u %.17g ",l->playmode,l->auto_rotate,l->shift,l->every,l->seed,l->origin);for(int j=0;j<32;j++)for(int k=0;k<5;k++)PUT("%d ",l->values[j][k]);}
+ for(int i=0;i<LANES;i++){const Lane *l=&e->lane[i];PUT("%d %d %d %d %u %.17g ",l->playmode,l->auto_rotate,l->shift,l->every,l->seed,l->origin);for(int j=0;j<32;j++)for(int k=0;k<5;k++)PUT("%d ",l->values[j][k]);}
  for(int i=0;i<LANES;i++)PUT("%d ",e->lane[i].hold);
  PUT("%d ",e->mod_selected);for(int i=0;i<MOD_SLOTS;i++){PUT("%d %d ",e->mod_pad[i]+1,e->mod[i].mix);for(int j=0;j<2;j++)for(int k=0;k<MOD_FIELDS;k++)PUT("%d ",e->mod[i].osc[j].f[k]);}
  PUT("SCALE %d %d EXTRA ",e->scale_applied_choice,e->scale_applied_start);
@@ -120,12 +148,16 @@ static int write_evolution(Engine *e,char *b,int size){int off=0;
  if(e->count_in_mode)PUT("COUNTIN %d ",e->count_in_mode);
  if(e->variation_ready){static const char hex[]="0123456789abcdef";
 #define ABPUT(value) do{unsigned byte=(unsigned)(value);if(byte>255||off+2>=size)return 0;b[off++]=hex[byte>>4];b[off++]=hex[byte&15];b[off]=0;}while(0)
- PUT("AB1 %u ",e->variation_ready);for(int i=0;i<LANES;i++)if(e->variation_ready&(1u<<i)){Variation *v=&e->alternate[i];ABPUT(e->variation_bank[i]);for(int f=0;f<4;f++)ABPUT(v->geometry[f]);for(int s=0;s<32;s++)for(int f=0;f<5;f++)ABPUT(v->values[s][f]+1);for(int s=0;s<32;s++)ABPUT(v->gates[s]+1);PUT(" ");}
+ PUT("AB1 %u ",e->variation_ready);for(int i=0;i<LANES;i++)if(e->variation_ready&(1u<<i)){const Variation *v=&e->alternate[i];ABPUT(e->variation_bank[i]);for(int f=0;f<4;f++)ABPUT(v->geometry[f]);for(int s=0;s<32;s++)for(int f=0;f<5;f++)ABPUT(v->values[s][f]+1);for(int s=0;s<32;s++)ABPUT(v->gates[s]+1);PUT(" ");}
 #undef ABPUT
  }
  PUT("END");return off;
 #undef PUT
 }
+static int write_evolution(Engine *e,char *b,int size){PicnSavedState s;capture_saved_state(e,&s);return write_saved_state(&s,b,size);}
+size_t picn_state_snapshot_bytes(void){return sizeof(PicnSavedState);}
+void picn_state_capture(void *inst,void *snapshot){capture_saved_state(inst,snapshot);}
+int picn_state_write(const void *snapshot,char *b,int size){return write_saved_state(snapshot,b,size);}
 static int read_number(const char **p,double *n){char *end;errno=0;*n=strtod(*p,&end);if(errno||end==*p||!isfinite(*n)||(*end&&*end!=' '))return 0;*p=end;while(**p==' ')(*p)++;return 1;}
 static int read_int(const char **p,int low,int high,int *n){double d;if(!read_number(p,&d)||d<low||d>high||d!=floor(d))return 0;*n=(int)d;return 1;}
 /* Compact A/B payload: 197 bytes per alternate lane, hex encoded. */

@@ -1,46 +1,24 @@
 # Installation and removal (Gen2, aarch64)
 
-The standard package `ClideaN-MPC-1.3.1-mpc-aarch64.zip` includes generated instructions in `INSTALL.md`; this page is the detailed Gen2 guide. For Gen1 and Force, use `ClideaN-MPC-1.3.1-mpc-armv7.zip` and its own guide.
+The standard package `ClideaN-MPC-1.3.7-mpc-aarch64.zip` includes generated instructions in `INSTALL.md`; this page is the detailed Gen2 guide. For Gen1 and Force, use `ClideaN-MPC-1.3.7-mpc-armv7.zip` and its own guide.
 
 ## Requirements
 
 - Akai MPC Gen2 (MPC Live III; other models require separate verification): a 64-bit aarch64 userland. Check with `uname -m`, which must print `aarch64`.
 - Root shell access (SSH) or a compatible installer that handles aarch64 portable plugin ZIPs and the `pluginList-arm-64bit` registration.
-- A writable, executable `Synths` folder. Removable drives are often mounted `noexec` and cannot load a plugin. On an MPC Live III the internal `/nvme/Synths` is writable and executable; `/synths` is read-only.
+- A writable, executable plugin folder. On OS versions with the official VST2 folder loader, use the device’s `VST2 Plugins` location and the included `plugin.json` (`file64`). Older supported hosts use `Synths`. Removable drives are often mounted `noexec` and cannot load a plugin. On an MPC Live III the internal `/nvme/Synths` is writable and executable; `/synths` is read-only.
 
-Thomas Phillips tested the original 1.2.4 port on an MPC Live III (aarch64, az0x base 5.0.17). This rebuilt 1.3.1 package is pending a fresh device test. Other Gen2 models are untested.
+Thomas Phillips tested the original 1.2.4 port on an MPC Live III (aarch64, az0x base 5.0.17). This rebuilt 1.3.7 package is pending a fresh device test. Other Gen2 models are untested.
 
-## Install by hand
+## Install with the standard package
 
-1. Save the current project, then stop playback.
-2. Unzip `ClideaN-MPC-1.3.1-mpc-aarch64.zip`. The plugin folder is `portable/Timo - VST - πClideaN MPC`.
-3. Copy that folder to the device's `Synths` folder, for example `/nvme/Synths/Timo - VST - πClideaN MPC`. Keep the folder name and the `.so` executable.
-4. Back up `MPC.settings` (on a Live III: `/data/Settings/MPC/MPC.settings`). Stop MPC (`systemctl stop acvs`) before editing it. MPC rewrites the file while it runs.
-5. In `MPC.settings`, add this entry as the first child of `<VALUE name="pluginList-arm-64bit"><KNOWNPLUGINS>`, adjusting the path to your `Synths` folder:
+1. Save the project and back up the current plugin/settings.
+2. Extract `ClideaN-MPC-1.3.7-mpc-aarch64.zip` and read its generated `INSTALL.md` inside `ClideaN-1.3.7/`.
+3. Use a compatible installer, or copy that complete folder to the device and run its included `install.sh` with the desired executable Synths destination. The script stops and restarts MPC: obtain authorization after saving first.
+4. The installed content folder is **`Timo - VST - πClideaN`**, containing `piclidean_mpc.so`. Registration is generated from the package metadata; do not reuse an old handwritten XML entry from 1.3.1.
+5. Open **πClideaN**, enable its corresponding `piClideaN MPC Out` MIDI input on the target track, and match the notes/channel.
 
-```xml
-<PLUGIN name="πClideaN MPC" descriptiveName="πClideaN MPC" format="VST"
-        category="Synth" manufacturer="Timo" version="1.3.1"
-        file="/nvme/Synths/Timo - VST - πClideaN MPC/piclidean_mpc.so"
-        uid="5069434e" isInstrument="1" fileTime="0" infoUpdateTime="0"
-        numInputs="0" numOutputs="2" isShell="0"/>
-```
-
-6. Start MPC again (`systemctl start acvs`).
-7. Create a Plugin Track and select **πClideaN MPC**.
-8. Create or select a target instrument or sample track, and match its sounds to the MIDI notes in CONFIG.
-9. On the target track, enable `piClideaN MPC Out` as its MIDI input and receive channel 1 or all channels.
-10. Start the transport.
-
-The content directory is `Timo - VST - πClideaN MPC`. Do not rename the binary, content directory or skin identifier independently. They form a single plugin identity.
-
-## Remove
-
-1. Stop playback and save any project changes you want to keep.
-2. Remove instances from projects, and the MIDI input assignments from target tracks.
-3. Stop MPC, remove the `PLUGIN` entry above from `MPC.settings` (or restore your backup), delete the `Timo - VST - πClideaN MPC` folder, and start MPC.
-
-Project files and samples are separate from the plugin package.
+Use the package's removal instructions for uninstalling; registration and files must be handled together. Projects and personal samples remain separate. The exact ZIP's generated metadata takes precedence over loose historical `plugin-meta.xml` files in the development tree.
 
 ## Routing checklist
 

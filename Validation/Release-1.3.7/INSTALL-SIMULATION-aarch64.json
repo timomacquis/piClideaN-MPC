@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "hardware_access": false,
+  "architecture": "aarch64",
+  "package": "ClideaN-MPC-1.3.7-mpc-aarch64.zip",
+  "sha256": "b13be28cbb92e332a8c9ca8ea35fba26cf77e6c74a6d5b6bcf238c24a7a82a06",
+  "checks": [
+    "official plugin.json + PiCN identity",
+    "ELF architecture",
+    "isolated Synths and VST2 Plugins install/reinstall/uninstall",
+    "neighbour preserved"
+  ]
+}

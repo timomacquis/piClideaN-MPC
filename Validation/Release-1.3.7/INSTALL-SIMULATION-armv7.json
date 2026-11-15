@@ -1,0 +1,13 @@
+{
+  "passed": true,
+  "hardware_access": false,
+  "architecture": "armv7",
+  "package": "ClideaN-MPC-1.3.7-mpc-armv7.zip",
+  "sha256": "b0422b86d508ad403a143e2434fce9b1984b89085d186a3c4124009f7b7d3c7b",
+  "checks": [
+    "official plugin.json + PiCN identity",
+    "ELF architecture",
+    "isolated Synths and VST2 Plugins install/reinstall/uninstall",
+    "neighbour preserved"
+  ]
+}
