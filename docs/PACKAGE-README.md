@@ -1,6 +1,6 @@
 # πClideaN — 1.3.7
 
-A sixteen-lane MIDI-only sequencer with Euclidean rhythms, per-step expression, polymetric cycles, scales, dual-LFO modulation, guided ALTER, A/B and Rdm 8.
+A sixteen-lane MIDI-only sequencer with Euclidean rhythms, per-step expression, polymetric cycles, scales, dual-LFO modulation, guided ALTER, A/B and RDM 8.
 
 Maintenance release: bounded recalls, stable restored lane selection, shorter shared-lock scope during project saves, synchronized controls and transient MIDI diagnostics. Includes the official plugin.json and standard catalog installers. See docs/RELEASE-NOTES-1.3.7.md and docs/VALIDATION-1.3.7.md.
 

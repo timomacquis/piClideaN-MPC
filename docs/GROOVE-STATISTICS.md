@@ -1,3 +1,5 @@
+> État relu le 10 novembre 2026 : fonctions intégrées à la base publique 1.3.5. Les références aux candidats ci-dessous retracent leur introduction, pas une absence de publication actuelle. Pour l’usage actuel : [manuel](MODE-EMPLOI.md) et [spécifications](SPECIFICATIONS.md).
+
 # Groove-derived preferences — 1.3.4-candidate.2
 
 πClideaN uses **457 bytes of constant integer tables** extracted offline from Groove MIDI Dataset v1.0.0. No raw MIDI/audio, neural model, TensorFlow dependency, network connection or user-side PC is required during playback. Search still runs only on an explicit ALTER/I RdM 8 request, on the existing background worker.
@@ -26,5 +28,3 @@ Actual native gestures, listening preference, live switching and crackle-free op
 ## Attribution
 
 Derived tables retain **CC BY 4.0** attribution to Google LLC and the Groove MIDI Dataset contributors. See [the attribution and modifications](../licenses/GROOVE-ATTRIBUTION.md) and [the dataset](https://magenta.tensorflow.org/datasets/groove). Paper: Gillick, Roberts, Engel, Eck and Bamman, *Learning to Groove with Inverse Sequence Transformations*, ICML 2019. Original generation/extraction code remains MIT. No endorsement is implied.
-
-The raw Groove MIDI Dataset archive is not distributed in this source repository or plugin package. Obtain the attributed upstream dataset separately to reproduce offline extraction. Runtime tables are already included in src/groove_tables.h.

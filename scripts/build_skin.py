@@ -14,6 +14,7 @@ if OUT.exists():shutil.rmtree(OUT)
 A.mkdir(parents=True)
 z=zipfile.ZipFile(B/'reference/skin-base.zip');assert hashlib.sha256((B/'reference/skin-base.zip').read_bytes()).hexdigest()==(B/'reference/skin-base.zip.sha256').read_text().split()[0]
 J=json.loads(z.read('Plugin Skins/TUI.json'));D=J['pageData'];D['componentDefinitions']['localComponentDefinitions']=[];defs=D['componentDefinitions']['localComponentDefinitions']
+BLUE='#518397'  # 1.3.8 charte : sélecteur sans valeur neutre = liseré bleu.
 C={'bg':'#171c1f','panel':'#242c31','oled':'#141d24','text':'#f1f2ed','muted':'#b4bcba','red':'#ee4b5d','amber_bg':'#383122','amber_text':'#c7aa6d','amber_edge':'#897447','edge':'#42515c'}
 VALUE_FONT=16  # Same native font height as the four-bar MOD tempo caption.
 PATTERN_VALUE_FONT=30  # Match πToniC rotary values; labels remain Titillium Web Regular 18.
@@ -84,11 +85,11 @@ def toggle(key,title,x,y,w,h):
   c=art(tag+'.png',0,0,w,h);c['bounds']['additionalInvalidatingHandles']=[gate(key,current,2)];children.append(c)
  actions=[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')]
  return [placed(local(f'toggle_native_{key}_{x}_{y}',children,actions,focus=True),key,x,y,w,h)]
-def field(key,x,y,w,h,n=VALUE_FONT):
- tag=f'field_{w}_{h}';fn=tag+'.png'
+def field(key,x,y,w,h,n=VALUE_FONT,amber=False):
+ tag=f'field_{w}_{h}'+('_amber' if amber else '');fn=tag+'.png'
  if not (A/fn).exists():
   im=Image.new('RGB',(w,h*128),C['bg']);dr=ImageDraw.Draw(im)
-  for f in range(128):rounded(dr,(1,f*h+1,w-2,(f+1)*h-2),fill=C['panel'],outline=C['edge'])
+  for f in range(128):on=amber and f>0;rounded(dr,(1,f*h+1,w-2,(f+1)*h-2),fill=C['amber_bg'] if on else C['panel'],outline=C['amber_edge'] if on else C['edge'])
   save(fn,im)
  parts=[child('Knob',dict(version=5,knobType='FilmStrip',filmStrip=fn,numFrames=127,invert=False,dragOrientation='Vertical',handleName='Data'),0,0,w,h),label(12,0,w-24,h,n)]
  k=local(f'field_{key}',parts,[action('Q-Link')],focus=True);return placed(k,key,x,y,w,h)
@@ -147,7 +148,7 @@ parts += [button('edit_view','LINE',20,410,148,46,False,0,2),button('edit_view',
 for view,mutepos,solopos in [(0,332,488),(1,488,644)]:
  for control in toggle('sel_mute','MUTE',mutepos,410,148,46)+toggle('sel_solo','SOLO',solopos,410,148,46):
   control['bounds']['additionalInvalidatingHandles'].append(gate('edit_view',view,2));parts.append(control)
-for control in [button('half','1/2',644,410,70,46,native_touch=True),button('double','x2',722,410,70,46,native_touch=True),button('undo','VAR',800,410,148,46,native_touch=True),button('open_target','Rdm 8',956,410,148,46,native_touch=True),rand_button(1112,410,148,46)]:
+for control in [button('half','1/2',644,410,70,46,native_touch=True),button('double','x2',722,410,70,46,native_touch=True),button('undo','VAR',800,410,148,46,native_touch=True),button('open_target','RDM 8',956,410,148,46,native_touch=True),rand_button(1112,410,148,46)]:
  control['bounds']['additionalInvalidatingHandles'].append(gate('edit_view',0,2));parts.append(control)
 parts += [button('edit_tool','SELECT',800,410,148,46,False,0,2,extra=[gate('edit_view',1,2)]),button('edit_tool','DRAW',956,410,148,46,False,1,2,extra=[gate('edit_view',1,2)]),button('erase_values','ERASE',1112,410,148,46,extra=[gate('edit_view',1,2)])]
 # piToniC card geometry, without an outer scope frame. Captions are cached
@@ -221,7 +222,7 @@ for i in range(32):
   outside=state>=16;active=not outside and state&1;selected=(not outside and state&2) or state==17;head=not outside and state&4;custom=not outside and state&8
   bg='#432449' if custom else '#352329' if active else C['panel'];ink='#d780e0' if custom else C['red'] if active else '#555e62' if outside else '#a5adaa'
   im,d=image(w,h);rounded(d,(1,1,w-2,h-2),fill=bg,outline='#ffffff' if selected else '#88518e' if custom else C['edge'],width=2 if selected else 1)
-  if head:rounded(d,(4,4,w-5,h-5),outline=C['red'],width=3,radius=7)
+  if head:rounded(d,(4,4,w-5,h-5),outline='#ef623e',width=1,radius=7)
   if custom:d.ellipse((w-17,10,w-13,14),fill=C['text'])
   text(d,(w//2,h//2),f'{i+1:02}',24,ink,'mm');fn=f'step{i}_state{state}.png';save(fn,im)
   c=art(fn,0,0,w,h);c['bounds']['additionalInvalidatingHandles']=[gate(f'editcell{i}',state,18)];
@@ -264,7 +265,7 @@ def track_static_field(key,x,y,w,h,n=VALUE_FONT):
  kind=local(f'track_field_{key}',[art(fn,0,0,w,h),label(12,0,w-24,h,n)],[action('Q-Link')],focus=True)
  return placed(kind,key,x,y,w,h)
 def track_mode_picker():
- fn='track_mode_pick.png';im,d=image(360,48);rounded(d,(1,1,358,46),fill=C['panel'],outline=C['edge']);save(fn,im)
+ fn='track_mode_pick.png';im,d=image(360,48);rounded(d,(1,1,358,46),fill=C['panel'],outline=BLUE);save(fn,im)
  kind=local('track_mode_picker',[art(fn,0,0,360,48),label(12,0,336,48,PICKER_FONT,handle='Caption')],[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')],focus=True)
  return placed(kind,'open_bank',880,116,360,48,maps=[{'key':'Caption','value':f"Parameter {I['play_mode']}"}])
 track_pages=[]
@@ -331,7 +332,7 @@ for pending in range(4):
 config.append(button('open_mapping','RESET',875,302,360,46,native_touch=True))
 # COUNT-IN is an explicit match to MPC; never guessed from stopped PPQ.
 im,d=image(360,28);text(d,(0,0),'COUNT-IN',CAPTION_FONT,C['muted']);save('config_countin.png',im);config.append(art('config_countin.png',875,382,360,28))
-config.append(field('can_redo',875,412,360,46,PICKER_FONT))
+config.append(field('can_redo',875,412,360,46,PICKER_FONT,amber=True))
 # Compact panel contract: only controls INSIDE these panels are 36px high.
 PANEL_H=36;panel_layouts=[]
 def anchor_control(page,key):
@@ -408,16 +409,19 @@ def mod_slider(key,x,y,w=180,h=58):
   for v in range(128):
    yy=v*h;d.rounded_rectangle((4,yy+11,w-5,yy+17),radius=3,fill='#464b4d');xx=7+int(v*(w-15)/127);d.line((7,yy+14,xx,yy+14),fill=C['amber_text'],width=5);d.ellipse((xx-5,yy+8,xx+5,yy+20),fill=C['amber_text'])
   save(fn,im)
- children=[child('Knob',dict(version=5,knobType='FilmStrip',filmStrip=fn,numFrames=127,invert=False,dragOrientation='Horizontal',handleName='Data'),0,0,w,h),label(8,28,w-16,h-28,VALUE_FONT)]
+ children=[child('Knob',dict(version=5,knobType='FilmStrip',filmStrip=fn,numFrames=127,invert=False,dragOrientation='Horizontal',handleName='Data'),0,0,w,h),label(8,20,w-16,h-20,20)]
 
  children[-1]['componentData']['data']['textStyle']['justification']='horizontallyCentred verticallyCentred'
  name=f'slider_{key}_{w}_{h}'
  if not any(row['key']==name for row in defs):local(name,children,[action('Q-Link')],focus=True)
  return placed(name,key,x,y,w,h)
 def mod_picker(key,pick,x,y,w,h,n=PICKER_FONT):
- fn=f'mod_pick_{pick}.png';im,d=image(w,h);rounded(d,(1,1,w-2,h-2),fill=C['panel'],outline=C['edge']);save(fn,im)
+ fn=f'mod_pick_{pick}.png';im,d=image(w,h);rounded(d,(1,1,w-2,h-2),fill=C['panel'],outline=C['edge'] if pick%4==3 else BLUE);save(fn,im)
  children=[art(fn,0,0,w,h)]
  if pick%4==3:
+  amber_fn=f'mod_pick_amber_{pick}.png';im,d=image(w,h);rounded(d,(1,1,w-2,h-2),fill=C['amber_bg'],outline=C['amber_edge']);save(amber_fn,im)
+  for dest in range(1,8):
+   c=art(amber_fn,0,0,w,h);c['bounds']['additionalInvalidatingHandles']=[gate(key,dest,11)];children.append(c)
   active_fn=f'mod_pick_chain_{pick}.png';im,d=image(w,h);rounded(d,(1,1,w-2,h-2),fill='#302733',outline='#8d649a');save(active_fn,im)
   for dest in [8,9,10]:
    c=art(active_fn,0,0,w,h);c['bounds']['additionalInvalidatingHandles']=[gate(key,dest,11)];children.append(c)
@@ -509,7 +513,7 @@ for c in mod_parts:
 selection_panel(mod_parts,6,'SELECT PAD',[f'A{i+1:02}' for i in range(16)],'mod_pad',17,'open_rhythm','mod_pad',start_id=1,none=True,tag='pad')
 scale_names=next(p['options'] for p in P if p['key']=='choose_sound')
 selection_panel(config,5,'SELECT SCALE',scale_names,'choose_sound',16,'choose_bank','choose_sound',tag='scale')
-cs,x,y,cond=compact_base(parts,4,'Rdm 8 — generate patterns 01–08',940,240,'open_target',static='Rdm 8',center_title=True)
+cs,x,y,cond=compact_base(parts,4,'RDM 8 — generate patterns 01–08',940,240,'open_target',static='RDM 8',center_title=True)
 im,d=image(892,90,C['oled']);text(d,(446,0),'Notes and MUTE stay. Lanes 09–16 are unchanged.',22,anchor='mt');text(d,(446,36),'01–08: LINE, step edits, A/B, HOLD, play modes and assigned MOD reset.',20,C['muted'],'mt');save('compact_rdm8_message.png',im);cs.append(art('compact_rdm8_message.png',x+24,y+84,892,80))
 cs += [button('apply_rhythm','APPLY',x+270,y+180,180,36,native_touch=True),button('close','CANCEL',x+490,y+180,180,36,native_touch=True)];finish_panel(parts,cs,cond)
 variation_button_font=BUTTON_FONT;BUTTON_FONT=20
@@ -594,7 +598,7 @@ for filename in ['Q-Links.json','Q-Links - 8by1.json','Q-Links - 4by4.json']:
  q=json.loads(z.read('Plugin Skins/'+template_file));template=q['Screen Mode Q-Links']['map'][0];rows=[]
  for tab in range(1,6):
   row=copy.deepcopy(template);row['Tab']=tab;row['SubTab']=1;row['Q-Links']={f'Q-Link {i}':-1 for i in range(1,17)}
-  keys=[f'q{i}' for i in range(8)] if tab==1 else ['mod0_depth','mod0_offset','mod0_phase','mod0_threshold','mod1_depth','mod1_offset','mod1_phase','mod1_threshold'] if tab==2 else ['line_select16','play_mode','auto_rotate','auto_shift','auto_every'] if tab in (3,4) else []
+  keys=[f'q{i}' for i in range(8)] if tab==1 else ['mod0_depth','mod0_offset','mod0_phase','mod0_threshold','mod1_depth','mod1_offset','mod1_phase','mod1_threshold'] if tab==2 else ['line_select16','auto_shift','auto_every'] if tab in (3,4) else []
   for hw,k in zip([13,9,5,1,14,10,6,2],keys):row['Q-Links'][f'Q-Link {hw}']=I[k]
   rows.append(row)
  q['Screen Mode Q-Links']['map']=rows

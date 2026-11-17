@@ -112,7 +112,7 @@ Un nouveau Steps respecte Hits et Rotate non sélectionnés. Si RAND change Step
 
 Un tirage peut redonner la même valeur.
 
-RAND, ALTER et Rdm 8 limitent les pas actifs générés à **75 % de la longueur de chaque ligne**, arrondis vers le bas (12/16, 24/32). L’édition manuelle reste libre. RAND sélectif conserve les paramètres non sélectionnés ; si le plafond est impossible à respecter, la ligne reste intacte et la sélection se ferme. Une ligne générée d’un seul pas est silencieuse. Cette limite ne réduit ni les répétitions ratchet ni les déclenchements LFO indépendants.
+RAND, ALTER et RDM 8 limitent les pas actifs générés à **75 % de la longueur de chaque ligne**, arrondis vers le bas (12/16, 24/32). L’édition manuelle reste libre. RAND sélectif conserve les paramètres non sélectionnés ; si le plafond est impossible à respecter, la ligne reste intacte et la sélection se ferme. Une ligne générée d’un seul pas est silencieuse. Cette limite ne réduit ni les répétitions ratchet ni les déclenchements LFO indépendants.
 
 ### ALTER et A/B — faire évoluer une ligne
 
@@ -136,9 +136,9 @@ Le passage A/B est immédiat : il n’attend pas la mesure suivante. Les notes t
 
 A/B conserve rythme et personnalisations par pas. Notes, paramètres LINE, MUTE/SOLO, HOLD, parcours et MOD restent communs. Les personnalisations restent à leur numéro de pas, même lorsqu’un raccourcissement les masque. Une variation incompatible avec les protections ou la densité laisse la ligne intacte.
 
-### Rdm 8 — construire huit motifs ensemble
+### RDM 8 — construire huit motifs ensemble
 
-Touche **Rdm 8**, puis **APPLY**. **CANCEL** ne change rien.
+Touche **RDM 8**, puis **APPLY**. **CANCEL** ne change rien.
 
 Les lignes **01–08** sont générées ensemble : appuis, réponses et espaces sont recherchés sur une grille temporelle commune. Les lignes **09–16 restent intactes**.
 
@@ -148,7 +148,7 @@ Un SOLO conservé sur 09–16 peut rendre les nouvelles lignes 01–08 inaudible
 
 Les **MUTE**, les **hauteurs MIDI** et la **gamme appliquée** restent conservés. Le calcul se fait en arrière-plan ; un changement de contexte pendant la recherche peut annuler sa proposition.
 
-Pour démarrer : génère huit lignes avec Rdm 8, garde les lignes indésirables mutées, puis développe une ligne à la fois avec VAR.
+Pour démarrer : génère huit lignes avec RDM 8, garde les lignes indésirables mutées, puis développe une ligne à la fois avec VAR.
 
 ## 4. PATTERN — EDIT
 
@@ -281,7 +281,7 @@ Réaffecter un PAD libère sa précédente note LFO.
 
 Suis le rythme en regardant **A01–A16**.
 
-Sur la capture, **A04** reste sélectionnée pendant que **A01 et A03** pulsent en azur. Les boutons atténués repèrent les lignes mutées ; le contour rouge interne du pas 03 marque la tête de lecture.
+Sur la capture, **A04** reste sélectionnée pendant que **A01 et A03** pulsent en azur. Les boutons atténués repèrent les lignes mutées ; le contour orange interne du pas 03 marque la tête de lecture.
 
 Une **impulsion azur** indique qu’une note émise arrive à son heure de lecture. Ta ligne sélectionnée garde son contour blanc.
 
@@ -299,7 +299,7 @@ Les boutons des lignes mutées sont atténués. Les sélectionner ne les démute
 
 **Contour blanc externe :** pas sélectionné.
 
-**Contour rouge interne :** tête de lecture.
+**Contour orange interne :** tête de lecture.
 
 **Bouton ambré :** mode ou état actif.
 
@@ -437,7 +437,7 @@ L’automatisation hôte est distincte de l’entrée CC MIDI : le plugin n’en
 
 ## 10. Presets, projets et lecture
 
-Pars de **INIT** pour obtenir seize lignes silencieuses et les notes par défaut, puis ajoute des frappes ou utilise Rdm 8.
+Pars de **INIT** pour obtenir seize lignes silencieuses et les notes par défaut, puis ajoute des frappes ou utilise RDM 8.
 
 Le menu natif **PRESET** propose aussi Straight Four, Broken Grid, Polymeter, Dorian Flow, Slow Orbit et Step Expression. Charger un preset remplace les réglages courants de l’instrument.
 
@@ -453,7 +453,7 @@ Les notes tenues et les phases LFO de lecture ne sont pas sauvegardées. Stop re
 
 ### Préférences rythmiques
 
-ALTER et Rdm 8 utilisent des préférences compactes extraites de Groove MIDI Dataset : espacements, appuis métriques compatibles, densités et superpositions. Tout fonctionne localement sur la Force. Cet ajout ne produit pas de swing, de décalage temporel humain ni de génération harmonique. [Méthode et crédits](GROOVE-STATISTICS.md).
+ALTER et RDM 8 utilisent des préférences compactes extraites de Groove MIDI Dataset : espacements, appuis métriques compatibles, densités et superpositions. Tout fonctionne localement sur la Force. Cet ajout ne produit pas de swing, de décalage temporel humain ni de génération harmonique. [Méthode et crédits](GROOVE-STATISTICS.md).
 
 
 ### Panneaux de sélection

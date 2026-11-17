@@ -27,7 +27,8 @@ static void *mod_preview_thread(void *arg){
  return NULL;
 }
 static int mod_preview_start(Engine *e){
- e->mod_preview_async=1;
+ /* 1.3.8 : mode asynchrone seulement si le fil existe ; sinon calcul direct (graphe MOD jamais vide). */
+ e->mod_preview_async=0;
  ModPreviewWorker *w=calloc(1,sizeof *w);if(!w)return 0;
  w->scratch=calloc(1,sizeof *w->scratch);if(!w->scratch){free(w);return 0;}
  atomic_init(&w->state,0);atomic_init(&w->stop,0);atomic_init(&w->completed,0);
@@ -36,7 +37,7 @@ static int mod_preview_start(Engine *e){
  int error=ok?pthread_create(&w->thread,&attr,mod_preview_thread,w):-1;
  if(initialized)pthread_attr_destroy(&attr);
  if(error){free(w->scratch);free(w);return 0;}
- e->mod_preview_worker=w;return 1;
+ e->mod_preview_worker=w;e->mod_preview_async=1;return 1;
 }
 static void mod_preview_stop(Engine *e){
  ModPreviewWorker *w=e->mod_preview_worker;if(!w)return;

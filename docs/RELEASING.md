@@ -1,24 +1,17 @@
-# Release procedure — both generations, standard packages only
+# Release procedure — Akai SDK plugin folders, both generations
 
-Every public release must ship **both** official Open MPC packages on the same tag:
+Rule (17 November 2026, all plugins): a plugin is installed **only** as one folder in `VST2 Plugins`, in the format of Akai's plugin SDK (`plugin.json`, binary, `version.xml`, `Plugin Skins/`). No catalogue `install.sh`, no `Synths`, no MPC.settings.
 
-- `ClideaN-MPC-X.Y.Z-mpc-armv7.zip` — Gen1 / Force, ARM32.
-- `ClideaN-MPC-X.Y.Z-mpc-aarch64.zip` — Gen2, ARM64.
+Every public release ships on one tag:
 
-Do not publish the former custom portable archives as an alternative installation path. The catalog entry matches the ARMv7 name and discovers the AArch64 sibling automatically.
+- `piClideaN-X.Y.Z-vst2-armv7.zip` — Gen1 / Force, ARM32 (`plugin.json` → `file32`).
+- `piClideaN-X.Y.Z-vst2-aarch64.zip` — Gen2, ARM64 (`file64`, Live III skin workaround).
+- `piClideaN-MPC-X.Y.Z-sources.zip`, and a `.sha256` file for each asset.
 
-## Required sequence
+## Sequence
 
-1. Set the release version and update the manuals and release notes. Preserve published parameter indices and the Gen2-only image workaround.
-2. Run the relevant engine, MIDI, UI and state tests. Record device results separately from offline checks; never copy a prior device test or CPU result to a new package.
-3. Build both architectures using `scripts/build.py` and `scripts/build_aarch64.py`. Measure CPU on the actual device with official `tools/bench.sh engine.so <device-ip> -j`. Keep the complete report, device/OS, context and engine checksum; record WARN explicitly and investigate FAIL. Gen1 results do not qualify Gen2. A matching Gen1 JSON and report under `docs/bench/force-X.Y.Z.json` / `force-X.Y.Z-report.json` are picked up by the packager; stale measurements are rejected.
-4. Run `scripts/package.py` and `scripts/package_aarch64.py`. Both delegate to unmodified upstream `release.py`, pinned under `third_party/open-mpc-release`, and run `catalog_check.py --catalog --require-portable`.
-5. Compare packaged engine and native skin bytes with the tested builds. Check each package's id, uid, version, source repo, architecture, checksums and official installer scripts.
-6. Simulate install/reinstall/uninstall in isolated local settings, including architecture-specific registration. Such simulations are not device tests.
-7. Make a complete local release backup: editable sources, both installation packages, checksums, manuals and validation records. Candidates use differential backups instead.
-8. Publish the two standard packages, their SHA-256 files and complete sources to one GitHub release/tag. Verify GitHub asset digests. Keep the preceding release available under its original tag.
-9. The catalog checks releases nightly. Passing local checks does not mean the public catalog has already refreshed. No new registry PR is needed for a version update that preserves identity and matching asset names.
-
-For 1.3.1, the already-published engine and skin are repackaged byte-for-byte; only the distribution format and standard metadata/scripts change. Provenance records distinguish the runtime build commit from the later packaging-workflow commit.
-
-Updating the packaging tool pin requires review of its source and checksums. Do not modify upstream installer templates locally to bypass a catalog failure.
+1. Set the version; update manuals and release notes. Never change the UID or published parameter indices.
+2. Run the engine, MIDI, UI and state tests.
+3. Build Gen1 (`scripts/build.py`) and Gen2 (`scripts/build_aarch64.py`), then assemble each SDK folder and ZIP.
+4. Install the exact Gen1 folder on a Force and check it; record device results separately from PC checks.
+5. Make a complete local backup, update the public repository, tag, publish the release with all assets and verify the downloaded SHA-256 values.

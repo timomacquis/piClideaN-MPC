@@ -16,7 +16,7 @@ static void *guidance_run(void *ptr){GuidanceWorker *w=ptr;prctl(PR_SET_NAME,"Pi
  struct timespec delay={0,10000000};nanosleep(&delay,NULL);
  }return NULL;
 }
-static int guidance_start(Engine *e){GuidanceWorker *w=calloc(1,sizeof *w);if(!w)return 0;w->scratch=calloc(1,sizeof *w->scratch);if(!w->scratch){free(w);return 0;}pthread_mutex_init(&w->lock,NULL);e->guidance_worker=w;return 1;}
+static int guidance_start(Engine *e){GuidanceWorker *w=calloc(1,sizeof *w);if(!w)return 0;w->scratch=calloc(1,sizeof *w->scratch);if(!w->scratch){free(w);return 0;}mod_init(w->scratch);/* 1.3.8 : brouillon initialisé (MOD neutre), pas des zéros */pthread_mutex_init(&w->lock,NULL);e->guidance_worker=w;return 1;}
 static void guidance_stop(Engine *e){GuidanceWorker *w=e->guidance_worker;if(!w)return;atomic_store(&w->stop,1);if(w->started)pthread_join(w->thread,NULL);pthread_mutex_destroy(&w->lock);free(w->scratch);free(w);e->guidance_worker=NULL;}
 static void guidance_request(Engine *e,int type){GuidanceWorker *w=e->guidance_worker;if(!w){e->variation_status=2;e->variation_ui=1;return;}
  if(!w->started){pthread_attr_t attr;int initialized=pthread_attr_init(&attr)==0;struct sched_param priority={0};int ok=initialized&&pthread_attr_setstacksize(&attr,128*1024)==0&&pthread_attr_setinheritsched(&attr,PTHREAD_EXPLICIT_SCHED)==0&&pthread_attr_setschedpolicy(&attr,SCHED_OTHER)==0&&pthread_attr_setschedparam(&attr,&priority)==0;if(ok)ok=pthread_create(&w->thread,&attr,guidance_run,w)==0;if(initialized)pthread_attr_destroy(&attr);if(!ok){e->variation_status=2;e->variation_ui=1;return;}w->started=1;}

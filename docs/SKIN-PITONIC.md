@@ -1,20 +1,20 @@
 # Skin πClideaN dans la famille πToniC
 
-Évolution graphique demandée et maquettes affinées avec Greg le 8 novembre 2026. Générateur natif modifié localement ; aucune installation ni publication.
+Évolution graphique demandée et maquettes affinées avec Greg le 8 novembre 2026. Skin intégré ; mise à jour typographique publiée en 1.3.5. Le correctif de police a été accepté sur Force.
 
 ## Règles retenues
 
 - Titillium Web Regular, même fichier de police que πToniC.
 - Fonds : `#171c1f` ; champs : `#242c31` ; encarts/graphes : `#141d24` ; bordures : `#42515c` ; texte : `#f1f2ed`.
-- Boutons : hauteur de police native 23. Listes et panneaux de choix : 20, légèrement inférieure aux boutons.
-- Valeurs numériques : 16, comme la légende native « 4 BARS / ... BPM ». Titres des contrôles : 18. LINE / STEPS / STEP : 14.
+- Boutons : hauteur de police native 23. Textes des champs de sélection : 22, légèrement inférieure aux boutons.
+- Valeurs des potentiomètres PATTERN : 30. Titres des contrôles : 18. LINE / STEPS / STEP : 14.
 - Les couleurs fonctionnelles restent distinctes : sélection rouge, verrous de pas violets, état actif ambre, sélection RAND / gamme en attente verte, activité azur. Les références LINE non éditables restent grisées en EDIT, sauf GATE par pas.
 
 ## PATTERN
 
 Encarts de 304 × 122, espacés de 8 pixels, à x=20/332/644/956. Deux rangées à y=132/276 dans la zone plugin native (hors en-tête MPC). Suppression du cadre englobant et de sa ligne de séparation. Titres de section plus discrets.
 
-Géométrie πToniC : filmstrip de potentiomètre 58 × 58 à x=12, centré verticalement ; titre à x=86/y=8 ; valeur à x=86/y=43 dans un champ de 210 × 42. La valeur utilise la petite police validée. La ligne de commandes est déplacée ensemble à y=410 ; les pas restent à leur emplacement y=470/534. Aucun chevauchement entre les rangées, commandes et pas.
+Géométrie πToniC : filmstrip de potentiomètre 58 × 58 à x=12, centré verticalement ; titre à x=86/y=8 ; valeur à x=86/y=43 dans un champ de 210 × 42. La valeur utilise Titillium Web Regular 30, centrée horizontalement dans sa zone. La ligne de commandes est déplacée ensemble à y=410 ; les pas restent à leur emplacement y=470/534. Aucun chevauchement entre les rangées, commandes et pas.
 
 La sélection RAND garde la même géométrie et le même angle de potentiomètre ; une seule cible tactile est active. Les titres sont des images statiques mises en cache, supprimant les interrogations natives Name correspondantes.
 

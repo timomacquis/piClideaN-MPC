@@ -1,4 +1,6 @@
-# Build — base de travail correspondant à 1.2.0
+# Build — πClideaN 1.3.5
+
+Current scope: Gen1 ARMv7 and Gen2 AArch64, separate receipts and packages. This guide builds files only; it does not authorize installation or publication.
 
 ## Inputs
 

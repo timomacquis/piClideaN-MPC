@@ -306,7 +306,6 @@ static void set_param_impl(void *inst,const char *key,const char *val){Engine *e
  if(!strcmp(key,"channel")){if(e->channel){e->panic=1;e->channel=0;changed_selected(e);}return;}
  if(!strcmp(key,"selected_step")){if(e->step!=clampi(v,0,e->lane[e->selected].f[0]-1))e->q_valid=0;e->step=clampi(v,0,e->lane[e->selected].f[0]-1);changed_selected(e);return;}
  if(!strcmp(key,"rhythm_choice")){if(e->rhythm==clampi(v,0,5))return;e->rhythm=clampi(v,0,5);changed_selected(e);return;}
- if(!strcmp(key,"edit_row")){e->row=clampi(v,0,LANES-1);return;}
  if(!strncmp(key,"sel_",4)){for(j=0;j<NF;j++)if(!strcmp(key+4,field_names[j])){Lane *l=&e->lane[e->selected];int accepted=clampi(v,mins[j],j==2?l->f[0]-1:maxs[j]);if(l->f[j]==accepted)return;l->f[j]=accepted;sanitize(l,j<3);if(j<4)e->release_pending|=1u<<e->selected;e->step=clampi(e->step,0,l->f[0]-1);changed_lane(e,e->selected);return;}}
  if(parse_lane(key,&i,&j)){if(j==10||j==11)return;if(j==8)j=9;int accepted=clampi(v,mins[j],j==2?e->lane[i].f[0]-1:maxs[j]);if(e->lane[i].f[j]==accepted)return;e->lane[i].f[j]=accepted;if(j==9)e->lane[i].f[8]=accepted;if(j>=8&&j<=11)e->release_pending|=1u<<i;sanitize(&e->lane[i],j<3);if(j<4)e->release_pending|=1u<<i;if(i==e->selected)e->step=clampi(e->step,0,e->lane[i].f[0]-1);changed_lane(e,i);return;}
  /* Momentary actions fire only on the press. The wrapper's release must be a no-op. */
@@ -347,13 +346,13 @@ static int get_param(void *inst,const char *key,char *b,int size){if(size<=0)ret
  int mod_result=mod_get(e,key,b,size);if(mod_result>=0)return mod_result;
  int extra=evolution_get(e,key,b,size);if(extra>=0)return extra;
  if(!strcmp(key,"display_rev"))return snprintf(b,size,"%u",e->revision);
- if(!strcmp(key,"choose_target"))n=e->mode;else if(!strcmp(key,"choose_bank"))n=e->bank;else if(!strcmp(key,"choose_sound"))n=e->lane[e->row].f[11];else if(!strcmp(key,"line")||!strcmp(key,"line_select"))n=clampi(e->selected,0,7);else if(!strcmp(key,"line_select16"))n=e->selected;else if(!strcmp(key,"pattern_base"))n=e->dialog!=1;else if(!strcmp(key,"setup_base"))n=e->dialog<2;else if(!strcmp(key,"target_mode"))n=e->mode;else if(!strcmp(key,"channel"))n=e->channel;else if(!strcmp(key,"bank"))n=e->bank;else if(!strcmp(key,"selected_step"))n=e->step;else if(!strcmp(key,"rhythm_choice"))n=e->rhythm;else if(!strcmp(key,"dialog"))n=e->dialog;else if(!strcmp(key,"edit_row"))n=e->row;else if(!strcmp(key,"map_sound"))n=e->lane[e->row].f[11];
+ if(!strcmp(key,"line")||!strcmp(key,"line_select"))n=clampi(e->selected,0,7);else if(!strcmp(key,"line_select16"))n=e->selected;else if(!strcmp(key,"pattern_base"))n=e->dialog!=1;else if(!strcmp(key,"setup_base"))n=e->dialog<2;else if(!strcmp(key,"target_mode"))n=e->mode;else if(!strcmp(key,"channel"))n=e->channel;else if(!strcmp(key,"bank"))n=e->bank;else if(!strcmp(key,"selected_step"))n=e->step;else if(!strcmp(key,"rhythm_choice"))n=e->rhythm;else if(!strcmp(key,"dialog"))n=e->dialog;
  else if(!strncmp(key,"sel_",4)){for(j=0;j<NF;j++)if(!strcmp(key+4,field_names[j])){n=l->f[j];break;}}
  else if(parse_lane(key,&i,&j))n=e->lane[i].f[j];
  else if(parse_suffix(key,"line_on",LANES,&i))n=e->selected==i;
  else if(parse_suffix(key,"preview",32,&i))n=4; /* retired RHYTHM readout */
  else if(parse_suffix(key,"cell",32,&i)){n=i>=l->f[0]?8:((l->pattern>>i)&1);if(e->step==i)n+=i>=l->f[0]?1:2;if(i<l->f[0]&&e->playing&&e->head[e->selected]==i)n+=4;}
- else if(sscanf(key,"g%d_%d",&i,&j)==2&&i>=0&&i<LANES&&j>=0&&j<32){Lane *t=&e->lane[i];n=j>=t->f[0]?4:((t->pattern>>j)&1);if(j<t->f[0]&&e->playing&&e->head[i]==j)n+=2;}
+ /* 1.3.8 : les clés g0_0…g7_31 servent à l'aperçu MOD (traitées en tête de get_param) ; l'ancienne grille g des lignes est retirée. */
  else if(!strcmp(key,"line_label")){if(!e->mode)return snprintf(b,size,"%02d - %s",e->selected+1,sounds[l->f[11]]);return snprintf(b,size,"%02d - %c%02d",e->selected+1,'A'+e->bank,l->f[10]+1);}
  else if(!strcmp(key,"target_label"))return snprintf(b,size,"%s / CH %d / NOTE %d",e->mode?"DRUM TRACK":"INSTRUMENT",e->channel+1,note(e,e->selected));
  else if(!strcmp(key,"status"))return snprintf(b,size,"%s / %s%s%s",e->playing?"PLAY":"STOP",e->seq?"MIDI READY":"NO MIDI PORT",(e->release_pending||e->midi_error_until>diagnostic_time())?" / CHECK MIDI":"",duplicates(e)?" / SHARED NOTE":"");

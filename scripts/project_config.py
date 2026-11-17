@@ -1,5 +1,5 @@
 """One identity for the engine, native content and distribution. ASCII source code."""
-VERSION = '1.3.7'
+VERSION = '1.3.8'
 DISPLAY_NAME = '\u03c0ClideaN'
 TECHNICAL_NAME = 'piClideaN MPC'
 FOLDER = 'Timo - VST - ' + DISPLAY_NAME

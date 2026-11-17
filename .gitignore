@@ -1,9 +1,5 @@
 build/
 toolchain/
 downloads/
-.venv/
 __pycache__/
 *.pyc
-*.partial
-.DS_Store
-Thumbs.db
