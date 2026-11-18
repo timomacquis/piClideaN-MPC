@@ -78,8 +78,7 @@ Choose the folder for your device. Both builds use πClideaN **1.3.8**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** | **ARM32** — ARMv7 | [Gen1 / ARM32 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.8/piClideaN-1.3.8-vst2-armv7.zip) | [Installation guide](docs/INSTALLATION.md) |
-| **Gen2** | **ARM64** — AArch64 | [Gen2 / ARM64 ZIP](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.8/piClideaN-1.3.8-vst2-aarch64.zip) | [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** and **Gen2** | **ARM32** + **ARM64** in one folder | [piClideaN-1.3.8-mpc-sdk.zip](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.8/piClideaN-1.3.8-mpc-sdk.zip) | [Installation guide](docs/INSTALLATION.md) · [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
 Unzip, copy the folder **`Timo - VST - πClideaN`** into **`VST2 Plugins`** at the root of a drive (User Memory: `/sdcard/VST2 Plugins`), then restart MPC. This is the installation method defined by Akai's plugin SDK. Gen2 packages are built from the same sources with the Live III skin workaround and await device validation. Thanks to Thomas Phillips for the original Gen2 port.
 

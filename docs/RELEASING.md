@@ -4,8 +4,7 @@ Rule (17 November 2026, all plugins): a plugin is installed **only** as one fold
 
 Every public release ships on one tag:
 
-- `piClideaN-X.Y.Z-vst2-armv7.zip` — Gen1 / Force, ARM32 (`plugin.json` → `file32`).
-- `piClideaN-X.Y.Z-vst2-aarch64.zip` — Gen2, ARM64 (`file64`, Live III skin workaround).
+- `piClideaN-X.Y.Z-mpc-sdk.zip` — one folder for Gen1 / Force (ARM32, `file32`) and Gen2 (ARM64, `file64`); also listed by the Open MPC catalog.
 - `piClideaN-MPC-X.Y.Z-sources.zip`, and a `.sha256` file for each asset.
 
 ## Sequence
