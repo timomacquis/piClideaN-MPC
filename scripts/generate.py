@@ -150,6 +150,19 @@ for param in P:
  if param['key']=='undo':param.update(name='VAR',momentary=True,refresh_display=False,poll=False)
  if param['key']=='redo':param.pop('options',None);param.update(name='A/B',momentary=False,display='int',dynamic_display=True,refresh_display=False,poll=False)
  if param['key']=='rhythm_choice':param.pop('options',None);param.update(name='Variation',min=0,max=2,display='int',dynamic_display=True,refresh_display=False,poll=False)
+# 1.4.0 : import de motifs MicroTonic (.mtpreset), page CONFIG. Poignées inactives
+# (textes jamais affichés par la skin) réutilisées ; clés et indices inchangés. Voir src/mt_import.h.
+MTI_BUTTONS=['IMPORT','UP','USER / SD','DRIVES','PREVIOUS','NEXT','CLOSE','IMPORT PATTERN']
+MTI_CHOICES=[chr(65+k) for k in range(12)]+[chr(65+k)+'+'+chr(66+k) for k in range(11)]
+for param in P:
+ k=param['key']
+ if k.startswith('name') and k[4:].isdigit():
+  i=int(k[4:]);param.update(name=f'Import file {i+1}' if i<8 else MTI_BUTTONS[i-8],display='int',momentary=True,poll=False,refresh_display=False)
+  if i<8:param['dynamic_display']=True
+ elif k=='mapping_label':param.update(name='Import',display='int',min=0,max=2,options=['CLOSED','FILES','PATTERN'],poll=False,refresh_display=False)
+ elif k=='port_label':param.update(name='Import pattern',display='int',min=0,max=len(MTI_CHOICES)-1,options=MTI_CHOICES,poll=False,refresh_display=False)
+ elif k in ('line_label','target_label','step_label','step_scope','line_scope'):
+  param.update(name={'line_label':'Import folder','target_label':'Import page','step_label':'Import status','step_scope':'Import pattern info','line_scope':'Import pattern lengths'}[k])
 (B/'params.json').write_text(json.dumps(P,ensure_ascii=True,indent=2)+'\n')
 (B/'vst.json').write_text(json.dumps(dict(name=DISPLAY_NAME,vendor='Timo',uid='PiCN',version=sum(int(v)*m for v,m in zip(VERSION.split("-",1)[0].split("."),(10000,100,1))),so='piclidean_mpc.so',params='params.json',custom_skin=True,cc=False,nrpn=False,defines={'HAS_SONG_POS':1,'HAS_DISPLAY_REV':0,'DISPLAY_REV_NO_UPDATE':1,'PARAM_TEXT_MAX':64,'PICN_HOST_CONTEXT':1,'PICN_NOTIFICATION_BUDGET':8,'MPC_CHUNK_BYTES':32768,'PICN_FACTORY_PROGRAMS':1}),indent=2)+'\n')
 ref=json.loads((B/'reference/DRUMTRACK-REFERENCE.json').read_text())

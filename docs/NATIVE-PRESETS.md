@@ -1,5 +1,7 @@
 # Presets natifs et audit Q-Link — 8 novembre 2026
 
+> **1.4.1 (24 novembre 2026)** : la banque devient INIT + les 150 kits Patternarium BEST de πToniC, même ordre et mêmes noms (motif A+B sur les lignes 1-8, lignes 9-16 = INIT), générée par `scripts/generate_patternarium_programs.py`. Les six programmes ci-dessous (Straight Four … Step Expression) sont retirés du menu ; leur banque est gardée dans `presets/factory-1.4.0.json`. Voir `docs/CANDIDATE-1.4.1.md`.
+
 Implémentation locale, reprise de la méthode validée dans πToniC. Cette note décrit l’étape initiale du 8 novembre. Des candidats ARM locaux sont désormais construits ; aucune installation de ces évolutions ni validation de leur menu sur Force.
 
 ## Menu PRESET natif

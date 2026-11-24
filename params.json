@@ -4626,7 +4626,7 @@
   },
   {
     "key": "line_label",
-    "name": "Selected sound",
+    "name": "Import folder",
     "min": 0,
     "max": 1,
     "default": 0,
@@ -4635,7 +4635,7 @@
   },
   {
     "key": "target_label",
-    "name": "MIDI NOTE",
+    "name": "Import page",
     "min": 0,
     "max": 1,
     "default": 0,
@@ -4653,7 +4653,7 @@
   },
   {
     "key": "step_label",
-    "name": "Selection",
+    "name": "Import status",
     "min": 0,
     "max": 1,
     "default": 0,
@@ -4662,93 +4662,149 @@
   },
   {
     "key": "mapping_label",
-    "name": "PAD",
+    "name": "Import",
     "min": 0,
-    "max": 1,
+    "max": 2,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "options": [
+      "CLOSED",
+      "FILES",
+      "PATTERN"
+    ],
+    "refresh_display": false
   },
   {
     "key": "port_label",
-    "name": "MODE",
+    "name": "Import pattern",
     "min": 0,
-    "max": 1,
+    "max": 22,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "options": [
+      "A",
+      "B",
+      "C",
+      "D",
+      "E",
+      "F",
+      "G",
+      "H",
+      "I",
+      "J",
+      "K",
+      "L",
+      "A+B",
+      "B+C",
+      "C+D",
+      "D+E",
+      "E+F",
+      "F+G",
+      "G+H",
+      "H+I",
+      "I+J",
+      "J+K",
+      "K+L"
+    ],
+    "refresh_display": false
   },
   {
     "key": "name0",
-    "name": "Lane 1 sound",
+    "name": "Import file 1",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name1",
-    "name": "Lane 2 sound",
+    "name": "Import file 2",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name2",
-    "name": "Lane 3 sound",
+    "name": "Import file 3",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name3",
-    "name": "Lane 4 sound",
+    "name": "Import file 4",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name4",
-    "name": "Lane 5 sound",
+    "name": "Import file 5",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name5",
-    "name": "Lane 6 sound",
+    "name": "Import file 6",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name6",
-    "name": "Lane 7 sound",
+    "name": "Import file 7",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "name7",
-    "name": "Lane 8 sound",
+    "name": "Import file 8",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false,
+    "dynamic_display": true
   },
   {
     "key": "preview0",
@@ -5357,7 +5413,7 @@
   },
   {
     "key": "step_scope",
-    "name": "step_scope",
+    "name": "Import pattern info",
     "min": 0,
     "max": 1,
     "default": 0,
@@ -5366,7 +5422,7 @@
   },
   {
     "key": "line_scope",
-    "name": "line_scope",
+    "name": "Import pattern lengths",
     "min": 0,
     "max": 1,
     "default": 0,
@@ -20313,12 +20369,14 @@
   },
   {
     "key": "name8",
-    "name": "Lane 9 sound",
+    "name": "IMPORT",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on8",
@@ -22120,12 +22178,14 @@
   },
   {
     "key": "name9",
-    "name": "Lane 10 sound",
+    "name": "UP",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on9",
@@ -23927,12 +23987,14 @@
   },
   {
     "key": "name10",
-    "name": "Lane 11 sound",
+    "name": "USER / SD",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on10",
@@ -25734,12 +25796,14 @@
   },
   {
     "key": "name11",
-    "name": "Lane 12 sound",
+    "name": "DRIVES",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on11",
@@ -27541,12 +27605,14 @@
   },
   {
     "key": "name12",
-    "name": "Lane 13 sound",
+    "name": "PREVIOUS",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on12",
@@ -29348,12 +29414,14 @@
   },
   {
     "key": "name13",
-    "name": "Lane 14 sound",
+    "name": "NEXT",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on13",
@@ -31155,12 +31223,14 @@
   },
   {
     "key": "name14",
-    "name": "Lane 15 sound",
+    "name": "CLOSE",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on14",
@@ -32962,12 +33032,14 @@
   },
   {
     "key": "name15",
-    "name": "Lane 16 sound",
+    "name": "IMPORT PATTERN",
     "min": 0,
     "max": 1,
     "default": 0,
-    "display": "string",
-    "poll": false
+    "display": "int",
+    "poll": false,
+    "momentary": true,
+    "refresh_display": false
   },
   {
     "key": "line_on15",

@@ -443,7 +443,7 @@ Host automation is separate from MIDI CC input: this plugin does not record or r
 
 Start with **INIT** for sixteen silent lanes and the default notes, then draw hits or use Rdm 8.
 
-The native **PRESET** menu also offers Straight Four, Broken Grid, Polymeter, Dorian Flow, Slow Orbit and Step Expression. Loading a preset replaces the instrument’s current settings.
+After INIT, the native **PRESET** menu offers the 150 Patternarium kits of πToniC, in the same order and with the same names: each puts the kit's A+B pattern (up to 32 steps) on lines 1 to 8; lines 9 to 16 stay as in INIT. Loading a preset replaces the instrument’s current settings.
 
 Found a rhythm you like? Save your own preset through the host’s native menu, or **save the host project**.
 

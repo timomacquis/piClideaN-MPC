@@ -544,6 +544,45 @@ for pick in range(8):
  caption=f'mod{pick//4}_'+['wave','sync','rate','dest'][pick%4]
  selection_panel(mod_parts,2,['WAVEFORM','CLOCK MODE','RATE','DESTINATION'][pick%4],mod_lists[pick//4][pick%4],'map_sound',11,f'open_sound{pick}',caption,context=[gate('can_undo',pick,8)],tag=f'mod_{pick}')
 for i,page in enumerate(track_pages):selection_panel(page,3,'PLAYBACK MODE',['FWD','REV','PEND1','PEND2','URN'],'map_sound',11,'open_bank','play_mode',tag=f'mode_{i}')
+# 1.4.0 : import de motifs MicroTonic (.mtpreset), page CONFIG sous COUNT-IN. Deux fenêtres
+# liées à leur propre état (mapping_label : 1 fichiers, 2 motif), jamais à 'dialog'.
+# Poignées réutilisées : voir src/mt_import.h. Sélecteur A-L / paires : liseré bleu (charte).
+MTI_OPENER=(875,518,360,46)
+im,d=image(360,28);text(d,(0,0),'MICROTONIC',CAPTION_FONT,C['muted']);save('config_mtimport.png',im);config.append(art('config_mtimport.png',875,488,360,28))
+config.append(button('name8','IMPORT .MTPRESET',*MTI_OPENER,native_touch=True))
+config.append(readout('step_label',875,570,385,46,VALUE_FONT))
+def mti_panel(value,title,w,h):
+ x=(1280-w)//2;y=(628-h)//2;cond=[gate('mapping_label',value,3)];xx,yy,ww,hh=MTI_OPENER
+ if x<xx+ww and x+w>xx and y<yy+hh and y+h>yy:y=yy-h-12
+ if not (A/'compact_scrim.png').exists():save('compact_scrim.png',Image.new('RGBA',(1280,628),(4,7,13,155)))
+ blocker=local(f'mti_blocker_{value}',[art('compact_scrim.png',0,0,1280,628)],[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')])
+ cs=[placed(blocker,'name14',0,0,1280,628)]
+ im,d=image(ww,hh);rounded(d,(1,1,ww-2,hh-2),fill=C['amber_bg'],outline=C['amber_edge']);text(d,(ww/2,hh/2),'IMPORT .MTPRESET',BUTTON_FONT,C['amber_text'],'mm');save(f'mti_opener_{value}.png',im)
+ c=placed(local(f'mti_raised_{value}',[art(f'mti_opener_{value}.png',0,0,ww,hh)]),'name8',xx,yy,ww,hh);c['bounds']['acceptsHWFocus']='No';cs.append(c)
+ im,d=image(w,h,C['oled']);rounded(d,(1,1,w-2,h-2),fill=C['oled'],outline=C['edge']);text(d,(24,16),title,22);save(f'mti_panel_{value}.png',im)
+ cs.append(placed(local(f'mti_surface_{value}',[art(f'mti_panel_{value}.png',0,0,w,h)],[action('Q-Link')]),'name14',x,y,w,h))
+ panel_layouts.append(dict(dialog=f'mapping_label={value}',title=title,panel=[x,y,w,h],opener_key='name8',opener_bounds=[xx,yy,ww,hh],conditions=cond))
+ return cs,x,y,cond
+# Files: same browser as the πToniC LOAD SAMPLE / IMPORT KIT windows.
+cs,x,y,cond=mti_panel(1,'IMPORT — MicroTonic .mtpreset (lines 01–08)',1180,448)
+for key,title,dx,bw in [('name9','UP',24,120),('name10','USER / SD',156,180),('name11','DRIVES',348,180),('name14','CLOSE',1180-184,160)]:cs.append(button(key,title,x+dx,y+54,bw,36,native_touch=True))
+cs.append(readout('line_label',x+24,y+100,1132,36,PICKER_FONT))
+im,d=image(560,36);rounded(d,(1,1,558,34),fill=C['panel'],outline=C['edge']);save('mti_entry.png',im)
+for i in range(8):
+ kind=local(f'mti_entry{i}',[art('mti_entry.png',0,0,560,36),label(12,2,536,32,PICKER_FONT)],[action('Toggle Switch'),dict(action('Toggle Switch'),onAction='Enter Pressed')],focus=True)
+ cs.append(placed(kind,f'name{i}',x+24+(i%2)*572,y+148+(i//2)*48,560,36))
+cs += [button('name12','PREVIOUS',x+24,y+354,180,36,native_touch=True),readout('target_label',x+460,y+354,260,36,PICKER_FONT),button('name13','NEXT',x+1180-204,y+354,180,36,native_touch=True),readout('step_label',x+24,y+400,1132,36,PICKER_FONT)]
+finish_panel(config,cs,cond)
+# Pattern: one of A-L, or two consecutive patterns end to end (up to 32 steps).
+cs,x,y,cond=mti_panel(2,'IMPORT PATTERN — lines 01–08',1180,340)
+cs.append(readout('line_scope',x+24,y+54,1132,32,CAPTION_FONT))
+names=[chr(65+k) for k in range(12)]+[chr(65+k)+'+'+chr(66+k) for k in range(11)]
+for c_id,title in enumerate(names):
+ single=c_id<12;bw=87 if single else 95;bx=x+24+(c_id if single else c_id-12)*(bw+8);by=y+96 if single else y+152
+ tag=f'mti_choice_{c_id}';cs.append(button('port_label',title,bx,by,bw,44,False,c_id,len(names),tag=tag))
+ im,d=image(bw,44);rounded(d,(1,1,bw-2,42),fill=C['panel'],outline=BLUE);text(d,(bw//2,22),title,BUTTON_FONT,C['text'],'mm');save(tag+'_0.png',im)
+cs += [readout('step_scope',x+24,y+212,1132,36,PICKER_FONT),button('name14','CANCEL',x+24,y+270,220,44,native_touch=True),button('name15','IMPORT',x+1180-244,y+270,220,44,native_touch=True)]
+finish_panel(config,cs,cond)
 (B/'Validation/UI-Compact-Panels/layout.json').write_text(json.dumps(panel_layouts,ensure_ascii=False,indent=2)+'\n')
 pages=[('PATTERN' ,parts),('MOD',mod_parts),('01 - 08',track_pages[0]),('09 - 16',track_pages[1]),('CONFIG',config)]
 for name,children in pages:

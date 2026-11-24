@@ -439,7 +439,7 @@ L’automatisation hôte est distincte de l’entrée CC MIDI : le plugin n’en
 
 Pars de **INIT** pour obtenir seize lignes silencieuses et les notes par défaut, puis ajoute des frappes ou utilise RDM 8.
 
-Le menu natif **PRESET** propose aussi Straight Four, Broken Grid, Polymeter, Dorian Flow, Slow Orbit et Step Expression. Charger un preset remplace les réglages courants de l’instrument.
+Le menu natif **PRESET** propose aussi, après INIT, les 150 kits Patternarium de πToniC, dans le même ordre et sous les mêmes noms : chacun place sur les lignes 1 à 8 le motif A+B du kit (jusqu’à 32 pas), les lignes 9 à 16 restent celles d’INIT. Charger un preset remplace les réglages courants de l’instrument.
 
 Tu tiens un rythme qui te plaît ? Sauve ton propre preset depuis le menu natif de l’hôte, ou **sauvegarde le projet**.
 

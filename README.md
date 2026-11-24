@@ -1,6 +1,6 @@
 # πClideaN
 
-**Version 1.3.8 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
+**Version 1.4.1 · Sixteen-lane hybrid MIDI sequencer for Akai MPC OS**
 
 ![πClideaN — PATTERN LINE, selective RAND](Cover.png)
 
@@ -11,6 +11,12 @@ Build evolving rhythmic and melodic patterns with sixteen independent lanes, per
 Installation now follows Akai's official SDK rule: copy one plugin folder into `VST2 Plugins`, restart MPC, nothing else. No installer script, no `Synths` folder, no MPC.settings entry. Engine fixes from a code review, MOD and CONFIG selectors follow the shared colour charter (blue outline when a selector has no neutral value, amber once it leaves OFF/NONE), thinner orange playhead, larger MOD slider values. Parameters, UID, presets and project format are unchanged.
 
 [Release notes](docs/RELEASE-NOTES-1.3.8.md). Gen2 remains untested on hardware.
+
+## Maintenance 1.4.1
+
+Installation now follows Akai's official SDK rule: copy one plugin folder into `VST2 Plugins`, restart MPC, nothing else. No installer script, no `Synths` folder, no MPC.settings entry. Engine fixes from a code review, MOD and CONFIG selectors follow the shared colour charter (blue outline when a selector has no neutral value, amber once it leaves OFF/NONE), thinner orange playhead, larger MOD slider values. Parameters, UID, presets and project format are unchanged.
+
+[Release notes](docs/RELEASE-NOTES-1.4.1.md). Gen2 remains untested on hardware.
 
 ## Maintenance 1.3.7
 
@@ -74,11 +80,11 @@ The plugin generates MIDI only. Use a separate target instrument or sample track
 
 ## Download and setup
 
-Choose the folder for your device. Both builds use πClideaN **1.3.8**.
+Choose the folder for your device. Both builds use πClideaN **1.4.1**.
 
 | Device generation | Architecture | Download | Installation |
 | --- | --- | --- | --- |
-| **Gen1 / Force** and **Gen2** | **ARM32** + **ARM64** in one folder | [piClideaN-1.3.8-mpc-sdk.zip](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.3.8/piClideaN-1.3.8-mpc-sdk.zip) | [Installation guide](docs/INSTALLATION.md) · [Gen2 guide](docs/INSTALLATION-GEN2.md) |
+| **Gen1 / Force** and **Gen2** | **ARM32** + **ARM64** in one folder | [piClideaN-1.4.1-mpc-sdk.zip](https://github.com/timomacquis/piClideaN-MPC/releases/download/v1.4.1/piClideaN-1.4.1-mpc-sdk.zip) | [Installation guide](docs/INSTALLATION.md) · [Gen2 guide](docs/INSTALLATION-GEN2.md) |
 
 Unzip, copy the folder **`Timo - VST - πClideaN`** into **`VST2 Plugins`** at the root of a drive (User Memory: `/sdcard/VST2 Plugins`), then restart MPC. This is the installation method defined by Akai's plugin SDK. Gen2 packages are built from the same sources with the Live III skin workaround and await device validation. Thanks to Thomas Phillips for the original Gen2 port.
 

@@ -1,3 +1,19 @@
+# Construire πClideaN — référence 1.3.8
+
+**Guide de reprise au 20 novembre 2026.** La version publique et indiquée installée est 1.3.8. Dans WSL, depuis la racine du projet :
+
+```sh
+NO_DEPLOY=1 bash scripts/release_vst2.sh
+```
+
+Ce script lance les tests, construit ARMv7 et le skin puis assemble le dossier SDK dans `build/vst2`. Avec `NO_DEPLOY=1`, il n’installe rien ; sans cette option, sa phase de déploiement exige projet enregistré et autorisation de relance. Conserver `toolchain/root` et ses liens Linux.
+
+[Installation SDK](INSTALLATION.md) · [Gen2](INSTALLATION-GEN2.md) · [Méthodes communes](../../Documentation/METHODES-DE-TRAVAIL.md). Pour une prochaine publication Gen1 + Gen2, le script de publication reste à aligner sur le ZIP unique `-mpc-sdk.zip` ; suivre [PUBLICATIONS.md](../../Documentation/Maintenance/PUBLICATIONS.md). Ne pas installer directement un ancien paquet catalogue produit par `package.py`.
+
+Le détail ci-dessous conserve la description technique de la base 1.3.5 ; ses anciens numéros et procédures de paquetage ne déterminent pas la version à installer. Les indices, paramètres et formats de projet publiés restent à préserver.
+
+---
+
 # Build — πClideaN 1.3.5
 
 Current scope: Gen1 ARMv7 and Gen2 AArch64, separate receipts and packages. This guide builds files only; it does not authorize installation or publication.

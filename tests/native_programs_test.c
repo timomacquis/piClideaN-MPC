@@ -21,7 +21,7 @@ static void alias_checks(AEffect *a){
 }
 int main(void){
  mpc_engine_t offline=*mpc_engine();offline.create=offline_create;offline.destroy=offline_destroy;g_api=&offline;
- AEffect *a=VSTPluginMain(host),*b=VSTPluginMain(host);assert(a&&b&&a->numPrograms==7&&a->numParams==4096);
+ AEffect *a=VSTPluginMain(host),*b=VSTPluginMain(host);assert(a&&b&&a->numPrograms==PICN_FACTORY_COUNT&&a->numParams==4096);
  char current[32768],restored[32768],name[64];state(a,current);assert(!strcmp(current,PICN_FACTORY[0].state));
  for(int i=0;i<PICN_FACTORY_COUNT;i++){
   assert(a->dispatcher(a,effGetProgramNameIndexed,i,0,name,0));assert(!strcmp(name,PICN_FACTORY[i].name));
@@ -43,6 +43,6 @@ int main(void){
  a->dispatcher(a,effSetProgram,0,-1,NULL,0);assert(a->dispatcher(a,effGetProgram,0,0,NULL,0)==1);
  Engine *musical=((wrap_t*)a->object)->dsp;variation_copy(musical);musical->lane[0].gates[3]=77;state(a,current);assert(!strncmp(current,"PICN8",5));chunk=NULL;size=a->dispatcher(a,effGetChunk,0,0,&chunk,0);assert(size>0&&size<32768);saved=malloc(size);memcpy(saved,chunk,size);assert(b->dispatcher(b,effSetChunk,0,size,saved,0));state(b,restored);assert(!strcmp(current,restored));free(saved);
  a->dispatcher(a,effClose,0,0,NULL,0);b->dispatcher(b,effClose,0,0,NULL,0);
- puts("PASS 7 native programs, explicit INIT, complete recalls and LFO OFF, 4096 stable handles, edited project/index round-trip, same-program echo, raw legacy states, malformed rejection, removed-index fallback and independent instances");
+ printf("PASS %d native programs,",PICN_FACTORY_COUNT);puts(" explicit INIT, complete recalls and LFO OFF, 4096 stable handles, edited project/index round-trip, same-program echo, raw legacy states, malformed rejection, removed-index fallback and independent instances");
  return 0;
 }

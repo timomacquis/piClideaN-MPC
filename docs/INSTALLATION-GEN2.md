@@ -1,8 +1,8 @@
-# Gen2 ARM64 — πClideaN 1.3.8
+# Gen2 ARM64 — πClideaN 1.4.1
 
 The package also holds a binary compiled for 64-bit Gen2 MPC devices (`uname -m` prints `aarch64`). **Not tested on Gen2 hardware.**
 
-Install exactly as on Gen1 (see [Installation and removal](INSTALLATION.md)): unzip `piClideaN-1.3.8-mpc-sdk.zip` and copy the folder **`Timo - VST - πClideaN`** into `VST2 Plugins` at the root of a drive, then restart MPC. On an MPC Live III the internal drive is `/nvme/VST2 Plugins`. Its `plugin.json` declares the 64-bit binary (`file64`).
+Install exactly as on Gen1 (see [Installation and removal](INSTALLATION.md)): unzip `piClideaN-1.4.1-mpc-sdk.zip` and copy the folder **`Timo - VST - πClideaN`** into `VST2 Plugins` at the root of a drive, then restart MPC. On an MPC Live III the internal drive is `/nvme/VST2 Plugins`. Its `plugin.json` declares the 64-bit binary (`file64`).
 
 ## Gen2 skin note
 
